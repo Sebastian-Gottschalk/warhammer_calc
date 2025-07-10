@@ -62,21 +62,33 @@ def roll(distr, thresh, reroll_ones = False):
     return resulting_distr
 
 
-def get_amount_of_hits(distr):
+def get_amount_of_hits(distr, sustained_hits = 0):
     '''
     calculates a 1-d distribution of the amount of successes given the matrix of hits and crits
     here hits and crits are treated the same, so no extra rules implemented yet
     '''
     n = distr.shape[0]
-    resulting_distr = [0]*n
-    for i in range(n):
-        for j in range(i+1):
-            resulting_distr[i] += distr[j,i-j]
+    if not sustained_hits:
+        resulting_distr = [0]*n
+        for i in range(n):
+            for j in range(i+1):
+                resulting_distr[i] += distr[j,i-j]
+    else:
+        resulting_distr = [0]*((n-1)*(1+sustained_hits)+1)
+        print(f"{n=}")
+        for i in range(n):
+            for j in range(n):
+                if i+j<=n-1:
+                    print(f"{i=}")
+                    print(f"{j=}")
+                    resulting_distr[i+(sustained_hits+1)*j] += distr[i,j]
     return resulting_distr
 
 
 
 ### STREAMLIT INTERFACE
+
+st.set_page_config(initial_sidebar_state = "collapsed")
 
 num_dice = st.number_input("Amount of dices used",1,100)
 dice_threshhold_1 = st.number_input("Hitting on",2,6)
@@ -91,57 +103,65 @@ with st.sidebar:
     else:
         reroll_ones_hit = False
         reroll_ones_wound = False
+    if st.checkbox("Sustained Hits"):
+        sustained_hits_nr = st.number_input("",1,10)
+    else:
+        sustained_hits_nr = 0
 
 col1, col2, col3 = st.columns(3)
 
 ### HIT ROLL
 
-start_distr = [0]*num_dice + [1]
-hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit)
-hit_roll_hits = get_amount_of_hits(hit_roll)
+with col1:
+    start_distr = [0]*num_dice + [1]
+    hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit)
+    hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr)
 
-fig, ax = plt.subplots()
-ax.bar(range(num_dice+1),hit_roll_hits)
-ax.set_xticks(range(num_dice+1))
-ax.set_title("Amount of hits")
-col1.pyplot(fig)
-expected_1 = 0
-for i in range(len(hit_roll_hits)):
-    expected_1 += i*hit_roll_hits[i]
-f"Expected number of hits: {np.round(expected_1,3)}"
+    num_dice = num_dice*(1+sustained_hits_nr)
+
+    fig, ax = plt.subplots()
+    ax.bar(range(num_dice+1),hit_roll_hits)
+    ax.set_xticks(range(num_dice+1))
+    ax.set_title("Amount of hits")
+    st.pyplot(fig)
+    expected_1 = 0
+    for i in range(len(hit_roll_hits)):
+        expected_1 += i*hit_roll_hits[i]
+    f"Expected number of hits: {np.round(expected_1,3)}"
 
 
 ### WOUND ROLL
+with col2:
+    wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound)
+    wound_roll_hits = get_amount_of_hits(wound_roll)
 
-wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound)
-wound_roll_hits = get_amount_of_hits(wound_roll)
-
-fig, ax = plt.subplots()
-# num_dice might need to be changed once sustained hits appear
-ax.bar(range(num_dice+1),wound_roll_hits)
-ax.set_xticks(range(num_dice+1))
-ax.set_title("Amount of successful wound rolls")
-col2.pyplot(fig)
-expected_2 = 0
-for i in range(len(wound_roll_hits)):
-    expected_2 += i*wound_roll_hits[i]
-f"Expected number of hits: {np.round(expected_2,3)}"
+    fig, ax = plt.subplots()
+    # num_dice might need to be changed once sustained hits appear
+    ax.bar(range(num_dice+1),wound_roll_hits)
+    ax.set_xticks(range(num_dice+1))
+    ax.set_title("Amount of successful wound rolls")
+    col2.pyplot(fig)
+    expected_2 = 0
+    for i in range(len(wound_roll_hits)):
+        expected_2 += i*wound_roll_hits[i]
+    f"Expected number of hits: {np.round(expected_2,3)}"
 
 
 ### SAVE ROLL
 # save roll of 2 (removing a hit on 2+) is equivalent to hitting on 6
 
-save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
-save_roll_hits = get_amount_of_hits(save_roll)
+with col3:
+    save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
+    save_roll_hits = get_amount_of_hits(save_roll)
 
-fig, ax = plt.subplots()
-# num_dice might need to be changed once sustained hits appear
-ax.bar(range(num_dice+1),save_roll_hits)
-ax.set_xticks(range(num_dice+1))
-ax.set_title("Amount of successful wound rolls")
-col3.pyplot(fig)
-expected_3 = 0
-for i in range(len(save_roll_hits)):
-    expected_3 += i*save_roll_hits[i]
-f"Expected number of wounds: {np.round(expected_3,3)}"
+    fig, ax = plt.subplots()
+    # num_dice might need to be changed once sustained hits appear
+    ax.bar(range(num_dice+1),save_roll_hits)
+    ax.set_xticks(range(num_dice+1))
+    ax.set_title("Amount of successful wound rolls")
+    col3.pyplot(fig)
+    expected_3 = 0
+    for i in range(len(save_roll_hits)):
+        expected_3 += i*save_roll_hits[i]
+    f"Expected number of wounds: {np.round(expected_3,3)}"
 
