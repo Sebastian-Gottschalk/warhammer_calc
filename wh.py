@@ -85,7 +85,7 @@ wound_roll_hits = get_amount_of_hits(wound_roll)
 
 fig, ax = plt.subplots()
 # num_dice might need to be changed once sustained hits appear
-ax.bar(range(num_dice+1),hit_roll_hits)
+ax.bar(range(num_dice+1),wound_roll_hits)
 ax.set_xticks(range(num_dice+1))
 ax.set_title("Amount of successful wound rolls")
 col2.pyplot(fig)
