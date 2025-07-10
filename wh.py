@@ -4,7 +4,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 
 
-def single_roll(n, thresh):
+def single_roll(n, thresh, reroll_ones = False):
     '''
     calculates the distribution of a single roll with n dice, with everything >= thresh being a sucess and every 6 being a crit
     the resulting matrix has the form
@@ -18,13 +18,33 @@ def single_roll(n, thresh):
     results = np.zeros((n+1,n+1))
     p_crit = 1/6
     p_hit = (6-thresh)/6
-    p = [p_hit,p_crit,1-p_hit-p_crit]
-    for i in range(n+1):
-        for j in range(n+1-i):
-            results[i,j] = multinomial.pmf([i,j,n-i-j], n=n, p=p)
+    if not reroll_ones:
+        p = [p_hit,p_crit,1-p_hit-p_crit]
+        for i in range(n+1):
+            for j in range(n+1-i):
+                if i+j<=n:
+                    results[i,j] = multinomial.pmf([i,j,n-i-j], n=n, p=p)
+    else:
+        # Get the probability distribution after the first roll
+        results_roll_1 = np.zeros((n+1,n+1,n+1))
+        p_one = 1/6
+        p = [p_one, p_hit, p_crit, 1-p_hit-p_one-p_crit]
+        for i in range(n+1): #ones
+            for j in range(n+1): #hits
+                for l in range(n+1): #crits
+                    if i+j+l<=n:
+                        results_roll_1[i,j,l] = multinomial.pmf([i,j,l,n-i-j-l], n=n, p=p)
+        
+        # Use the first distribution to reroll ones
+        for i in range(n+1): #ones
+            new_roll = single_roll(i,thresh)
+            for j in range(n+1): #hits
+                for l in range(n+1): #crits
+                    if i+j+l<=n:
+                        results[j:j+i+1, l:l+i+1] += results_roll_1[i,j,l]*new_roll
     return results
 
-def roll(distr, thresh):
+def roll(distr, thresh, reroll_ones = False):
     '''
     distr is a list e.g. [0.25,0.5,0.25] meaning
     25% chance of n=0
@@ -36,7 +56,7 @@ def roll(distr, thresh):
     max_n = len(distr)
     resulting_distr = np.zeros((max_n,max_n))
     for n, prob in enumerate(distr):
-        n_distr = single_roll(n,thresh)
+        n_distr = single_roll(n,thresh, reroll_ones)
         n_distr = np.pad(n_distr,(0,max_n-n-1), mode="constant", constant_values=0)
         resulting_distr += prob * n_distr
     return resulting_distr
@@ -54,17 +74,30 @@ def get_amount_of_hits(distr):
             resulting_distr[i] += distr[j,i-j]
     return resulting_distr
 
+
+
+### STREAMLIT INTERFACE
+
 num_dice = st.number_input("Amount of dices used",1,100)
 dice_threshhold_1 = st.number_input("Hitting on",2,6)
 dice_threshhold_2 = st.number_input("Wounding on",2,6)
 dice_threshhold_3 = st.number_input("Saving on",2,6)
+
+with st.sidebar:
+    reroll_ones = st.checkbox("Reroll ones")
+    if reroll_ones:
+        reroll_ones_hit = st.checkbox("Hitroll")
+        reroll_ones_wound = st.checkbox("Wound")
+    else:
+        reroll_ones_hit = False
+        reroll_ones_wound = False
 
 col1, col2, col3 = st.columns(3)
 
 ### HIT ROLL
 
 start_distr = [0]*num_dice + [1]
-hit_roll = roll(start_distr, dice_threshhold_1)
+hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit)
 hit_roll_hits = get_amount_of_hits(hit_roll)
 
 fig, ax = plt.subplots()
@@ -80,7 +113,7 @@ f"Expected number of hits: {np.round(expected_1,3)}"
 
 ### WOUND ROLL
 
-wound_roll = roll(hit_roll_hits, dice_threshhold_2)
+wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound)
 wound_roll_hits = get_amount_of_hits(wound_roll)
 
 fig, ax = plt.subplots()
