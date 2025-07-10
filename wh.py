@@ -75,13 +75,21 @@ def get_amount_of_hits(distr, sustained_hits = 0):
                 resulting_distr[i] += distr[j,i-j]
     else:
         resulting_distr = [0]*((n-1)*(1+sustained_hits)+1)
-        print(f"{n=}")
         for i in range(n):
             for j in range(n):
                 if i+j<=n-1:
-                    print(f"{i=}")
-                    print(f"{j=}")
                     resulting_distr[i+(sustained_hits+1)*j] += distr[i,j]
+    return resulting_distr
+
+def get_dicesum(nr_dice, bias, dice_size):
+    single_die = np.ones(dice_size) / dice_size
+    distr = single_die
+    for _ in range(nr_dice-1):
+        distr = np.convolve(distr, single_die)
+    possible_sum = np.arange(nr_dice + bias, dice_size*nr_dice+bias+1)
+    resulting_distr = [0]*(dice_size*nr_dice+bias+1)
+    for i in possible_sum:
+        resulting_distr[i] = distr[i-min(possible_sum)]
     return resulting_distr
 
 
@@ -89,8 +97,21 @@ def get_amount_of_hits(distr, sustained_hits = 0):
 ### STREAMLIT INTERFACE
 
 st.set_page_config(initial_sidebar_state = "collapsed")
+if st.checkbox("Additional stuff:"):
+    coll1, coll2, coll3 = st.columns(3)
+    with coll1:
+        num_dice = st.number_input("Dice", min_value=1, value=5, key='num_dice')
 
-num_dice = st.number_input("Amount of dices used",1,100)
+    with coll2:
+        dice_size = st.number_input("Dice Size", value = 6, min_value=2)
+
+    with coll3:
+        modifier = st.number_input("Modifier", value=3, key='modifier', min_value=0)
+    
+    start_distr = get_dicesum(num_dice, modifier, dice_size)
+else:
+    num_dice = st.number_input("Amount of dices used",1,100)
+    start_distr = [0]*num_dice + [1]
 dice_threshhold_1 = st.number_input("Hitting on",2,6)
 dice_threshhold_2 = st.number_input("Wounding on",2,6)
 dice_threshhold_3 = st.number_input("Saving on",2,6)
@@ -103,25 +124,20 @@ with st.sidebar:
     else:
         reroll_ones_hit = False
         reroll_ones_wound = False
-    if st.checkbox("Sustained Hits"):
-        sustained_hits_nr = st.number_input("",1,10)
-    else:
-        sustained_hits_nr = 0
+    sustained_hits_nr = st.number_input("Sustained Hits",0,10)
+    lethal_hits = st.checkbox("Lethal Hits")
+    torrent = st.checkbox("Torrent")
 
 col1, col2, col3 = st.columns(3)
 
 ### HIT ROLL
 
 with col1:
-    start_distr = [0]*num_dice + [1]
     hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit)
     hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr)
-
-    num_dice = num_dice*(1+sustained_hits_nr)
-
     fig, ax = plt.subplots()
-    ax.bar(range(num_dice+1),hit_roll_hits)
-    ax.set_xticks(range(num_dice+1))
+    ax.bar(range(len(hit_roll_hits)),hit_roll_hits)
+    ax.set_xticks(range(0,len(hit_roll_hits)+1,np.max([1,len(hit_roll_hits)//10])))
     ax.set_title("Amount of hits")
     st.pyplot(fig)
     expected_1 = 0
@@ -132,13 +148,20 @@ with col1:
 
 ### WOUND ROLL
 with col2:
-    wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound)
-    wound_roll_hits = get_amount_of_hits(wound_roll)
+    if not lethal_hits and not torrent:
+        wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound)
+        wound_roll_hits = get_amount_of_hits(wound_roll)
+    elif torrent:
+        # Torrent rules skip the Hit roll
+        wound_roll_hits = hit_roll_hits
+    elif lethal_hits:
+        # Lethal Hits
+        pass
 
     fig, ax = plt.subplots()
     # num_dice might need to be changed once sustained hits appear
-    ax.bar(range(num_dice+1),wound_roll_hits)
-    ax.set_xticks(range(num_dice+1))
+    ax.bar(range(len(wound_roll_hits)),wound_roll_hits)
+    ax.set_xticks(range(0,len(wound_roll_hits),np.max([1,len(wound_roll_hits)//10])))
     ax.set_title("Amount of successful wound rolls")
     col2.pyplot(fig)
     expected_2 = 0
@@ -156,12 +179,11 @@ with col3:
 
     fig, ax = plt.subplots()
     # num_dice might need to be changed once sustained hits appear
-    ax.bar(range(num_dice+1),save_roll_hits)
-    ax.set_xticks(range(num_dice+1))
+    ax.bar(range(len(save_roll_hits)),save_roll_hits)
+    ax.set_xticks(range(0,len(save_roll_hits),np.max([1,len(wound_roll_hits)//10])))
     ax.set_title("Amount of successful wound rolls")
     col3.pyplot(fig)
     expected_3 = 0
     for i in range(len(save_roll_hits)):
         expected_3 += i*save_roll_hits[i]
     f"Expected number of wounds: {np.round(expected_3,3)}"
-
