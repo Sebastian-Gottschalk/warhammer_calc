@@ -138,7 +138,7 @@ with st.sidebar:
     st.write("========================================")
     st.write("Additional ressources:")
     st.page_link("http://wahapedia.ru/", label = "Wahapedia")
-    st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know how to interpret these plots")
+    st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
     st.page_link("https://www.linkedin.com/in/josua-keil-10546a311/", label = "Show me some Orc pictures")
 
 col1, col2, col3 = st.columns(3)
