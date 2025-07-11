@@ -2,8 +2,10 @@ import numpy as np
 from scipy.stats import  multinomial
 import streamlit as st
 import matplotlib.pyplot as plt
+import pandas as pd
+from mpl_toolkits.mplot3d import Axes3D
 
-
+@st.cache_data
 def single_roll(n, thresh, reroll_ones = False):
     '''
     calculates the distribution of a single roll with n dice, with everything >= thresh being a sucess and every 6 being a crit
@@ -44,6 +46,7 @@ def single_roll(n, thresh, reroll_ones = False):
                         results[j:j+i+1, l:l+i+1] += results_roll_1[i,j,l]*new_roll
     return results
 
+@st.cache_data
 def roll(distr, thresh, reroll_ones = False):
     '''
     distr is a list e.g. [0.25,0.5,0.25] meaning
@@ -61,7 +64,7 @@ def roll(distr, thresh, reroll_ones = False):
         resulting_distr += prob * n_distr
     return resulting_distr
 
-
+@st.cache_data
 def get_amount_of_hits(distr, sustained_hits = 0):
     '''
     calculates a 1-d distribution of the amount of successes given the matrix of hits and crits
@@ -110,11 +113,16 @@ if st.checkbox("Additional stuff:"):
     
     start_distr = get_dicesum(num_dice, modifier, dice_size)
 else:
-    num_dice = st.number_input("Amount of dices used",1,100)
+    num_dice = st.number_input("Amount of dices used",1,100, value=5)
     start_distr = [0]*num_dice + [1]
-dice_threshhold_1 = st.number_input("Hitting on",2,6)
-dice_threshhold_2 = st.number_input("Wounding on",2,6)
-dice_threshhold_3 = st.number_input("Saving on",2,6)
+
+co1, co2, co3 = st.columns(3)
+with co1:
+    dice_threshhold_1 = st.number_input("Hitting on",2,6, value=4)
+with co2:
+    dice_threshhold_2 = st.number_input("Wounding on",2,6, value=4)
+with co3:
+    dice_threshhold_3 = st.number_input("Saving on",2,6, value=4)
 
 with st.sidebar:
     reroll_ones = st.checkbox("Reroll ones")
@@ -127,6 +135,11 @@ with st.sidebar:
     sustained_hits_nr = st.number_input("Sustained Hits",0,10)
     lethal_hits = st.checkbox("Lethal Hits")
     torrent = st.checkbox("Torrent")
+    st.write("========================================")
+    st.write("Additional ressources:")
+    st.page_link("http://wahapedia.ru/", label = "Wahapedia")
+    st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know how to interpret these plots")
+    st.page_link("https://www.linkedin.com/in/josua-keil-10546a311/", label = "Show me some Orc pictures")
 
 col1, col2, col3 = st.columns(3)
 
@@ -139,6 +152,10 @@ with col1:
     ax.bar(range(len(hit_roll_hits)),hit_roll_hits)
     ax.set_xticks(range(0,len(hit_roll_hits)+1,np.max([1,len(hit_roll_hits)//10])))
     ax.set_title("Amount of hits")
+    ax.set_ylabel("Density")
+    ax2 = ax.twinx()
+    ax2.plot(range(len(hit_roll_hits)), np.cumsum(hit_roll_hits), color='red', marker='o', linestyle='-', label='Probability')
+    ax2.set_ylabel('Distribution')
     st.pyplot(fig)
     expected_1 = 0
     for i in range(len(hit_roll_hits)):
@@ -163,6 +180,10 @@ with col2:
     ax.bar(range(len(wound_roll_hits)),wound_roll_hits)
     ax.set_xticks(range(0,len(wound_roll_hits),np.max([1,len(wound_roll_hits)//10])))
     ax.set_title("Amount of successful wound rolls")
+    ax.set_ylabel("Density")
+    ax2 = ax.twinx()
+    ax2.plot(range(len(wound_roll_hits)), np.cumsum(wound_roll_hits), color='red', marker='o', linestyle='-', label='Probability')
+    ax2.set_ylabel('Distribution')
     col2.pyplot(fig)
     expected_2 = 0
     for i in range(len(wound_roll_hits)):
@@ -182,8 +203,62 @@ with col3:
     ax.bar(range(len(save_roll_hits)),save_roll_hits)
     ax.set_xticks(range(0,len(save_roll_hits),np.max([1,len(wound_roll_hits)//10])))
     ax.set_title("Amount of successful wound rolls")
+    ax.set_ylabel("Density")
+    ax2 = ax.twinx()
+    ax2.plot(range(len(save_roll_hits)), np.cumsum(save_roll_hits), color='red', marker='o', linestyle='-', label='Probability')
+    ax2.set_ylabel('Distribution')
     col3.pyplot(fig)
     expected_3 = 0
     for i in range(len(save_roll_hits)):
         expected_3 += i*save_roll_hits[i]
     f"Expected number of wounds: {np.round(expected_3,3)}"
+
+if st.checkbox("Show distribution"):
+    data = [
+        hit_roll_hits,
+        list(pd.Series(hit_roll_hits).cumsum()),
+        wound_roll_hits,
+        list(pd.Series(wound_roll_hits).cumsum()),
+        save_roll_hits,
+        list(pd.Series(save_roll_hits).cumsum()),
+    ]
+    index = pd.MultiIndex.from_tuples([
+        ('Hit', 'P(X=x)'),
+        ('Hit', 'P(X<=x)'),
+        ('Wound', 'P(X=x)'),
+        ('Wound', 'P(X<=x)'),
+        ('Save', 'P(X=x)'),
+        ('Save', 'P(X<=x)'),
+    ])
+    st.dataframe(pd.DataFrame(data, index=index))
+
+if st.checkbox("Show cool plotz"):
+    colll1, colll2 = st.columns(2)
+    with colll1:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection = "3d")
+        x = np.arange(hit_roll.shape[1])
+        y = np.arange(hit_roll.shape[0])
+        X,Y = np.meshgrid(x,y)
+        Z = hit_roll
+        surf = ax.plot_surface(X, Y, Z, cmap='viridis')
+        ax.set_title('Hitroll')
+        ax.set_xlabel('Crits')
+        ax.set_ylabel('Hits')
+        ax.set_zlabel('Value')
+        fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+        st.pyplot(fig)
+    with colll2:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection = "3d")
+        x = np.arange(wound_roll.shape[1])
+        y = np.arange(wound_roll.shape[0])
+        X,Y = np.meshgrid(x,y)
+        Z = wound_roll
+        surf = ax.plot_surface(X, Y, Z, cmap='viridis')
+        ax.set_title('Woundroll')
+        ax.set_xlabel('Crits')
+        ax.set_ylabel('Hits')
+        ax.set_zlabel('Value')
+        fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+        st.pyplot(fig)
