@@ -135,7 +135,7 @@ with st.sidebar:
     sustained_hits_nr = st.number_input("Sustained Hits",0,10)
     lethal_hits = st.checkbox("Lethal Hits")
     torrent = st.checkbox("Torrent")
-    st.write("========================================")
+    st.write("============================")
     st.write("Additional ressources:")
     st.page_link("http://wahapedia.ru/", label = "Wahapedia")
     st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
