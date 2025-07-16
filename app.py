@@ -15,7 +15,7 @@ from roll_tools import *
 # st.set_page_config(initial_sidebar_state = "collapsed")
 st.set_page_config(layout="wide")
 
-st.title("=======================================Attack Dice=======================================")
+st.title("Attack Dice")
 coll1, coll2, coll3 = st.columns(3)
 with coll1:
     num_dice = st.number_input("Dice", min_value=0, value=0, key='num_dice')
@@ -30,7 +30,7 @@ with coll3:
 
 start_distr = get_dicesum(num_dice, modifier, dice_size)
 
-st.title("=====================================Damage Profile=====================================")
+st.title("Damage Profile")
 
 colllll1, colllll2, colllll3 = st.columns(3)
 
@@ -99,7 +99,6 @@ with st.sidebar:
     st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
     st.page_link("https://www.linkedin.com/in/josua-keil-10546a311/", label = "Show me some Orc pictures")
 
-st.title("=======================================================================================")
 if feel_no_pain:
     col1, col2,col3,col4, col5= st.columns(5)
 else:
