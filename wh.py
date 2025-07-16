@@ -205,10 +205,10 @@ with col1:
 
 ### WOUND ROLL
 with col2:
-    if not torrent and not lethal_hits:
+    if not lethal_hits:
         wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound)
         wound_roll_hits = get_amount_of_hits(wound_roll)
-    elif not torrent and lethal_hits:
+    else:
         wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1])
         for i in range(hit_roll_hits.shape[1]):
             wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones_wound)
