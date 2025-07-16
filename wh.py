@@ -6,7 +6,7 @@ import pandas as pd
 from mpl_toolkits.mplot3d import Axes3D
 
 @st.cache_data
-def single_roll(n, thresh, reroll_ones = False):
+def single_roll(n, thresh, reroll_ones = False,critting_on = 6):
     '''
     calculates the distribution of a single roll with n dice, with everything >= thresh being a sucess and every 6 being a crit
     the resulting matrix has the form
@@ -18,8 +18,8 @@ def single_roll(n, thresh, reroll_ones = False):
     (where of course p_ij = 0 if i+j>n)
     '''
     results = np.zeros((n+1,n+1))
-    p_crit = 1/6
-    p_hit = (6-thresh)/6
+    p_crit = (7-critting_on)/6
+    p_hit = (critting_on-thresh)/6
     if not reroll_ones:
         p = [p_hit,p_crit,1-p_hit-p_crit]
         for i in range(n+1):
@@ -39,7 +39,7 @@ def single_roll(n, thresh, reroll_ones = False):
         
         # Use the first distribution to reroll ones
         for i in range(n+1): #ones
-            new_roll = single_roll(i,thresh)
+            new_roll = single_roll(i,thresh,critting_on=critting_on)
             for j in range(n+1): #hits
                 for l in range(n+1): #crits
                     if i+j+l<=n:
@@ -47,7 +47,7 @@ def single_roll(n, thresh, reroll_ones = False):
     return results
 
 @st.cache_data
-def roll(distr, thresh, reroll_ones = False):
+def roll(distr, thresh, reroll_ones = False,critting_on=6):
     '''
     distr is a list e.g. [0.25,0.5,0.25] meaning
     25% chance of n=0
@@ -59,7 +59,7 @@ def roll(distr, thresh, reroll_ones = False):
     max_n = len(distr)
     resulting_distr = np.zeros((max_n,max_n))
     for n, prob in enumerate(distr):
-        n_distr = single_roll(n,thresh, reroll_ones)
+        n_distr = single_roll(n,thresh, reroll_ones,critting_on=critting_on)
         n_distr = np.pad(n_distr,(0,max_n-n-1), mode="constant", constant_values=0)
         resulting_distr += prob * n_distr
     return resulting_distr
@@ -143,7 +143,17 @@ with st.sidebar:
         reroll_ones_wound = False
     sustained_hits_nr = st.number_input("Sustained Hits",0,10)
     lethal_hits = st.checkbox("Lethal Hits")
-    torrent = st.checkbox("Torrent")
+    if not lethal_hits:
+        torrent = st.checkbox("Torrent")
+    else:
+        torrent = st.checkbox("Torrent")
+    if st.checkbox("Modify Crit threshholds"):
+        hit_roll_crit = st.number_input("Hit roll critting on",dice_threshhold_1,6,value=6)
+        wound_roll_crit = st.number_input("Wound roll critting on", dice_threshhold_2,6, value=6)
+    else:
+        hit_roll_crit=6
+        wound_roll_crit=6
+
     st.write("============================")
     st.write("Additional ressources:")
     st.page_link("http://wahapedia.ru/", label = "Wahapedia")
@@ -156,12 +166,12 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     if not torrent: 
-        hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit)
+        hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit, critting_on=hit_roll_crit)
         hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, lethal_hits=lethal_hits)
     else:
         hit_roll_hits = start_distr
 
-    if not lethal_hits:
+    if not lethal_hits or torrent:
         fig, ax = plt.subplots()
         ax.bar(range(len(hit_roll_hits)),hit_roll_hits)
         ax.set_xticks(range(0,len(hit_roll_hits)+1,np.max([1,len(hit_roll_hits)//10])))
@@ -204,18 +214,20 @@ with col1:
 
 
 ### WOUND ROLL
-with col2:
-    if not lethal_hits:
-        wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound)
-        wound_roll_hits = get_amount_of_hits(wound_roll)
-    else:
-        wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1])
-        for i in range(hit_roll_hits.shape[1]):
-            wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones_wound)
-            wound_roll_hits[i:i+hit_roll_hits.shape[0]+1] = [x + y for x, y in zip(wound_roll_hits[i:i+hit_roll_hits.shape[0]+1], get_amount_of_hits(wound_roll))]
 
+with col2:
+    if lethal_hits and not torrent:
+        wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1)
+        for i in range(hit_roll_hits.shape[1]):
+            wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones_wound, critting_on=wound_roll_crit)
+            wound_roll_hits[i:i+hit_roll_hits.shape[0]] += np.array(get_amount_of_hits(wound_roll))
+        if not sustained_hits_nr:
+            wound_roll_hits=wound_roll_hits[0:hit_roll_hits.shape[0]]
+    else:
+        wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound, critting_on= wound_roll_crit)
+        wound_roll_hits = get_amount_of_hits(wound_roll)
+        
     fig, ax = plt.subplots()
-    # num_dice might need to be changed once sustained hits appear
     ax.bar(range(len(wound_roll_hits)),wound_roll_hits)
     ax.set_xticks(range(0,len(wound_roll_hits),np.max([1,len(wound_roll_hits)//10])))
     ax.set_title("Amount of successful wound rolls")
@@ -290,7 +302,7 @@ if st.checkbox("Show cool plotz"):
             fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
             st.pyplot(fig)
         else:
-            st.write("No Hitroll plot when torrent or lethal_hits is active")
+            st.write("No Hitroll plot when torrent is active")
     with colll2:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection = "3d")
