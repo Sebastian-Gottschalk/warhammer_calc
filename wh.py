@@ -6,7 +6,7 @@ import pandas as pd
 from mpl_toolkits.mplot3d import Axes3D
 
 @st.cache_data
-def single_roll(n, thresh, reroll_ones = False,critting_on = 6):
+def single_roll(n, thresh, reroll_ones = False,critting_on = 6, reroll_all = False):
     '''
     calculates the distribution of a single roll with n dice, with everything >= thresh being a sucess and every 6 being a crit
     the resulting matrix has the form
@@ -20,7 +20,7 @@ def single_roll(n, thresh, reroll_ones = False,critting_on = 6):
     results = np.zeros((n+1,n+1))
     p_crit = (7-critting_on)/6
     p_hit = (critting_on-thresh)/6
-    if not reroll_ones:
+    if not reroll_ones and not reroll_all:
         p = [p_hit,p_crit,1-p_hit-p_crit]
         for i in range(n+1):
             for j in range(n+1-i):
@@ -28,26 +28,42 @@ def single_roll(n, thresh, reroll_ones = False,critting_on = 6):
                     results[i,j] = multinomial.pmf([i,j,n-i-j], n=n, p=p)
     else:
         # Get the probability distribution after the first roll
-        results_roll_1 = np.zeros((n+1,n+1,n+1))
-        p_one = 1/6
-        p = [p_one, p_hit, p_crit, 1-p_hit-p_one-p_crit]
-        for i in range(n+1): #ones
+        if reroll_ones:
+            results_roll_1 = np.zeros((n+1,n+1,n+1))
+            p_one = 1/6
+            p = [p_one, p_hit, p_crit, 1-p_hit-p_one-p_crit]
+        elif reroll_all:
+            results_roll_1 = np.zeros((n+1,n+1))
+            p_one = 1-p_hit-p_crit
+            p = [p_one, p_hit, p_crit]
+        for i in range(n+1): #crits
             for j in range(n+1): #hits
-                for l in range(n+1): #crits
-                    if i+j+l<=n:
-                        results_roll_1[i,j,l] = multinomial.pmf([i,j,l,n-i-j-l], n=n, p=p)
+                if reroll_all:
+                    if i+j<=n:
+                        results_roll_1[i,j] = multinomial.pmf([i,j,n-i-j], n=n, p=p)
+                else: # reroll_ones
+                    for l in range(n+1): #ones
+                        if i+j+l<=n:
+                                results_roll_1[i,j,l] = multinomial.pmf([i,j,l,n-i-j-l], n=n, p=p)
+        
+                                
         
         # Use the first distribution to reroll ones
         for i in range(n+1): #ones
             new_roll = single_roll(i,thresh,critting_on=critting_on)
             for j in range(n+1): #hits
-                for l in range(n+1): #crits
-                    if i+j+l<=n:
-                        results[j:j+i+1, l:l+i+1] += results_roll_1[i,j,l]*new_roll
+                if reroll_all:
+                    if i+j<=n:
+                        l=n-j-i
+                        results[j:j+i+1, l:l+i+1] += results_roll_1[i,j]*new_roll
+                else: # reroll_ones
+                    for l in range(n+1): #crits
+                        if i+j+l<=n:
+                            results[j:j+i+1, l:l+i+1] += results_roll_1[i,j,l]*new_roll
     return results
 
 @st.cache_data
-def roll(distr, thresh, reroll_ones = False,critting_on=6):
+def roll(distr, thresh, reroll_ones = False,critting_on=6,reroll_all = False):
     '''
     distr is a list e.g. [0.25,0.5,0.25] meaning
     25% chance of n=0
@@ -59,9 +75,10 @@ def roll(distr, thresh, reroll_ones = False,critting_on=6):
     max_n = len(distr)
     resulting_distr = np.zeros((max_n,max_n))
     for n, prob in enumerate(distr):
-        n_distr = single_roll(n,thresh, reroll_ones,critting_on=critting_on)
-        n_distr = np.pad(n_distr,(0,max_n-n-1), mode="constant", constant_values=0)
-        resulting_distr += prob * n_distr
+        if prob:
+            n_distr = single_roll(n,thresh, reroll_ones,critting_on=critting_on,reroll_all=reroll_all)
+            n_distr = np.pad(n_distr,(0,max_n-n-1), mode="constant", constant_values=0)
+            resulting_distr += prob * n_distr
     return resulting_distr
 
 @st.cache_data
@@ -134,19 +151,28 @@ with co3:
     dice_threshhold_3 = st.number_input("Saving on",2,6, value=4)
 
 with st.sidebar:
-    reroll_ones = st.checkbox("Reroll ones")
-    if reroll_ones:
-        reroll_ones_hit = st.checkbox("Hitroll")
-        reroll_ones_wound = st.checkbox("Wound")
-    else:
-        reroll_ones_hit = False
-        reroll_ones_wound = False
+    reroll = st.checkbox("Rerolls")
+    reroll_ones_hit = False
+    reroll_all_hit = False
+    reroll_ones_wound = False
+    reroll_all_wound = False
+    if reroll:
+        reroll_col1, reroll_col2 = st.columns(2)
+        with reroll_col1:
+            rerolls_hit = st.radio("Hit Roll", ["No reroll" , "Reroll 1s", "Reroll all"])
+            if rerolls_hit == "Reroll 1s":
+                reroll_ones_hit = True
+            elif rerolls_hit == "Reroll all":
+                reroll_all_hit = True
+        with reroll_col2:
+            rerolls_wound = st.radio("Wound Roll", ["No reroll" , "Reroll 1s", "Reroll all"])
+            if rerolls_wound == "Reroll 1s":
+                reroll_ones_wound = True
+            elif rerolls_wound == "Reroll all":
+                reroll_all_wound = True
     sustained_hits_nr = st.number_input("Sustained Hits",0,10)
     lethal_hits = st.checkbox("Lethal Hits")
-    if not lethal_hits:
-        torrent = st.checkbox("Torrent")
-    else:
-        torrent = st.checkbox("Torrent")
+    torrent = st.checkbox("Torrent")
     if st.checkbox("Modify Crit threshholds"):
         hit_roll_crit = st.number_input("Hit roll critting on",dice_threshhold_1,6,value=6)
         wound_roll_crit = st.number_input("Wound roll critting on", dice_threshhold_2,6, value=6)
@@ -166,7 +192,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     if not torrent: 
-        hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit, critting_on=hit_roll_crit)
+        hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones=reroll_ones_hit, critting_on=hit_roll_crit, reroll_all=reroll_all_hit)
         hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, lethal_hits=lethal_hits)
     else:
         hit_roll_hits = start_distr
@@ -219,12 +245,12 @@ with col2:
     if lethal_hits and not torrent:
         wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1)
         for i in range(hit_roll_hits.shape[1]):
-            wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones_wound, critting_on=wound_roll_crit)
+            wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on=wound_roll_crit, reroll_all=reroll_all_wound)
             wound_roll_hits[i:i+hit_roll_hits.shape[0]] += np.array(get_amount_of_hits(wound_roll))
         if not sustained_hits_nr:
             wound_roll_hits=wound_roll_hits[0:hit_roll_hits.shape[0]]
     else:
-        wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound, critting_on= wound_roll_crit)
+        wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on= wound_roll_crit, reroll_all=reroll_all_wound)
         wound_roll_hits = get_amount_of_hits(wound_roll)
         
     fig, ax = plt.subplots()
