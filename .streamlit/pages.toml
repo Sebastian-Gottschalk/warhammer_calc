@@ -1,0 +1,9 @@
+[[pages]]
+path = "app.py"
+name = "Main"
+icon= ""
+
+[[pages]]
+path = "pages/warhammer.py"
+name = "Warhammer 40K"
+icon = ""

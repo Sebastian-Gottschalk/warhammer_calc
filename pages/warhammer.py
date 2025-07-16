@@ -13,7 +13,10 @@ from roll_tools import *
 ### STREAMLIT INTERFACE
 
 # st.set_page_config(initial_sidebar_state = "collapsed")
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide", 
+    page_title = "Warhammer 40K"
+)
 
 st.title("Attack Dice")
 coll1, coll2, coll3 = st.columns(3)
