@@ -113,15 +113,17 @@ with col1:
         hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, lethal_hits=lethal_hits)
     else:
         hit_roll_hits = start_distr
+    
+    hit_roll_plot = get_threshhold_plot(hit_roll_hits)
 
     if not lethal_hits or torrent:
         fig, ax = plt.subplots()
-        ax.bar(range(len(hit_roll_hits)),hit_roll_hits)
-        ax.set_xticks(range(0,len(hit_roll_hits)+1,np.max([1,len(hit_roll_hits)//10])))
+        ax.bar(range(len(hit_roll_plot)),hit_roll_plot)
+        ax.set_xticks(range(0,len(hit_roll_plot)+1,np.max([1,len(hit_roll_plot)//10])))
         ax.set_title("Amount of hits")
         ax.set_ylabel("Density")
         ax2 = ax.twinx()
-        ax2.plot(range(len(hit_roll_hits)), np.cumsum(hit_roll_hits), color='red', marker='o', linestyle='-', label='Probability')
+        ax2.plot(range(len(hit_roll_plot)), np.cumsum(hit_roll_plot), color='blue', marker='o', linestyle='-', label='Probability')
         ax2.set_ylabel('Distribution')
         st.pyplot(fig)
         expected_1 = 0
@@ -133,28 +135,29 @@ with col1:
         crits = hit_roll_hits.sum(axis=0)
         if len(hits)>len(crits):
             crits = np.pad(crits, (0, len(hits)-len(crits)), mode="constant")
+        
+        [hits_plot, crits_plot] = get_threshhold_plot([hits,crits], multi_list=True)
+        
         width = 0.35
         fig, ax = plt.subplots()
-        ax.bar(np.arange(len(hits))-width/2,hits,width, label = "Hits", color = "blue")
-        ax.bar(np.arange(len(hits))+width/2,crits,width, label = "Crits", color = "red")
-        ax.set_xticks(range(0,len(hits)+1,np.max([1,len(hits)//10])))
+        ax.bar(np.arange(len(hits_plot))-width/2,hits_plot,width, label = "Hits", color = "blue")
+        ax.bar(np.arange(len(hits_plot))+width/2,crits_plot,width, label = "Crits", color = "red")
+        ax.set_xticks(range(0,len(hits_plot)+1,np.max([1,len(hits_plot)//10])))
         ax.set_title("Hit roll")
         ax.set_ylabel("Density")
         ax2 = ax.twinx()
-        ax2.plot(range(len(hits)), np.cumsum(hits), color='blue', marker='o', linestyle='-', label='Hits')
-        ax2.plot(range(len(crits)), np.cumsum(crits), color='red', marker='o', linestyle='-', label='Crits')
+        ax2.plot(range(len(hits_plot)), np.cumsum(hits_plot), color='blue', marker='o', linestyle='-', label='Hits')
+        ax2.plot(range(len(crits_plot)), np.cumsum(crits_plot), color='red', marker='o', linestyle='-', label='Crits')
         ax2.set_ylabel('Distribution')
         ax2.set_ylim([0,1])
         ax.legend(loc = "upper left")
         st.pyplot(fig)
         expected_1 = 0
+        expected_1_2 = 0
         for i in range(len(hits)):
             expected_1 += i*hits[i]
-        f"Expected number of hits: {np.round(expected_1,3)}"
-        expected_1 = 0
-        for i in range(len(crits)):
-            expected_1 += i*crits[i]
-        f"Expected number of crits: {np.round(expected_1,3)}"
+            expected_1_2 += i*crits[i]
+        f"Expected number of hits / crits: {np.round(expected_1,3)} / {np.round(expected_1_2,3)}"
 
 
 ### WOUND ROLL
@@ -171,13 +174,16 @@ with col2:
         wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on= wound_roll_crit, reroll_all=reroll_all_wound)
         wound_roll_hits = get_amount_of_hits(wound_roll)
         
+
+    wound_roll_plot = get_threshhold_plot(wound_roll_hits)
+
     fig, ax = plt.subplots()
-    ax.bar(range(len(wound_roll_hits)),wound_roll_hits)
-    ax.set_xticks(range(0,len(wound_roll_hits),np.max([1,len(wound_roll_hits)//10])))
+    ax.bar(range(len(wound_roll_plot)),wound_roll_plot)
+    ax.set_xticks(range(0,len(wound_roll_plot),np.max([1,len(wound_roll_plot)//10])))
     ax.set_title("Wound roll")
     ax.set_ylabel("Density")
     ax2 = ax.twinx()
-    ax2.plot(range(len(wound_roll_hits)), np.cumsum(wound_roll_hits), color='red', marker='o', linestyle='-', label='Probability')
+    ax2.plot(range(len(wound_roll_plot)), np.cumsum(wound_roll_plot), color='blue', marker='o', linestyle='-', label='Probability')
     ax2.set_ylabel('Distribution')
     ax2.set_ylim([0,1])
     col2.pyplot(fig)
@@ -195,13 +201,15 @@ with col3:
     save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
     save_roll_hits = get_amount_of_hits(save_roll)
 
+    save_roll_plot = get_threshhold_plot(save_roll_hits)
+
     fig, ax = plt.subplots()
-    ax.bar(range(len(save_roll_hits)),save_roll_hits)
-    ax.set_xticks(range(0,len(save_roll_hits),np.max([1,len(wound_roll_hits)//10])))
+    ax.bar(range(len(save_roll_plot)),save_roll_plot)
+    ax.set_xticks(range(0,len(save_roll_plot),np.max([1,len(save_roll_plot)//10])))
     ax.set_title("Save roll")
     ax.set_ylabel("Density")
     ax2 = ax.twinx()
-    ax2.plot(range(len(save_roll_hits)), np.cumsum(save_roll_hits), color='red', marker='o', linestyle='-', label='Probability')
+    ax2.plot(range(len(save_roll_plot)), np.cumsum(save_roll_plot), color='blue', marker='o', linestyle='-', label='Probability')
     ax2.set_ylabel('Distribution')
     ax2.set_ylim([0,1])
     col3.pyplot(fig)
@@ -219,10 +227,7 @@ with col4:
         damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
         damage_distr_cur = np.convolve(damage_distr_cur,damage_distr)
 
-    damage_roll_cumsum = np.cumsum(damage_roll)
-    damage_roll_index = np.argmax(damage_roll_cumsum>0.999)
-    damage_roll_index = min(damage_roll_index+1, len(damage_roll))
-    damage_roll_plot = damage_roll[:damage_roll_index]
+    damage_roll_plot = get_threshhold_plot(damage_roll)
 
     fig, ax = plt.subplots()
     ax.bar(range(len(damage_roll_plot)),damage_roll_plot)
@@ -230,7 +235,7 @@ with col4:
     ax.set_title("Damage roll")
     ax.set_ylabel("Density")
     ax2 = ax.twinx()
-    ax2.plot(range(len(damage_roll_plot)), np.cumsum(damage_roll_plot), color='red', marker='o', linestyle='-', label='Probability')
+    ax2.plot(range(len(damage_roll_plot)), np.cumsum(damage_roll_plot), color='blue', marker='o', linestyle='-', label='Probability')
     ax2.set_ylabel('Distribution')
     ax2.set_ylim([0,1])
     col4.pyplot(fig)
@@ -248,10 +253,7 @@ if feel_no_pain:
                 prob = binom.pmf(k,n,prob_fnp)
                 damage_fnp[k]+=prob*damage_roll[n]
 
-        damage_fnp_cumsum = np.cumsum(damage_fnp)
-        damage_fnp_index = np.argmax(damage_fnp_cumsum>0.999)
-        damage_fnp_index = min(damage_fnp_index+1, len(damage_fnp))
-        damage_fnp_plot = damage_fnp[:damage_fnp_index]
+        damage_fnp_plot = get_threshhold_plot(damage_fnp)
 
         fig, ax = plt.subplots()
         ax.bar(range(len(damage_fnp_plot)),damage_fnp_plot)
@@ -259,7 +261,7 @@ if feel_no_pain:
         ax.set_title("Feel no Pain roll")
         ax.set_ylabel("Density")
         ax2 = ax.twinx()
-        ax2.plot(range(len(damage_fnp_plot)), np.cumsum(damage_fnp_plot), color='red', marker='o', linestyle='-', label='Probability')
+        ax2.plot(range(len(damage_fnp_plot)), np.cumsum(damage_fnp_plot), color='blue', marker='o', linestyle='-', label='Probability')
         ax2.set_ylabel('Distribution')
         ax2.set_ylim([0,1])
         col5.pyplot(fig)
