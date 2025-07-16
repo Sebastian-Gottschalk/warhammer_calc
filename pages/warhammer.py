@@ -19,8 +19,11 @@ st.set_page_config(
     page_icon = "🧌"
 )
 
-st.title("Attack Dice")
-coll1, coll2, coll3 = st.columns(3)
+_,col_title_1,_ = st.columns([1.25,1,1])
+with col_title_1:
+    st.title("Attack Dice")
+
+_,coll1, coll2, coll3,_ = st.columns(5)
 with coll1:
     num_dice = st.number_input("Dice", min_value=0, value=0, key='num_dice')
 
@@ -33,10 +36,11 @@ with coll3:
     modifier = st.number_input("Modifier", value=3, key='modifier', min_value=0)
 
 start_distr = get_dicesum(num_dice, modifier, dice_size)
+_,col_title_2,_ = st.columns([1.15,1,1])
+with col_title_2:
+    st.title("Damage Profile")
 
-st.title("Damage Profile")
-
-colllll1, colllll2, colllll3 = st.columns(3)
+_,colllll1, colllll2, colllll3,_ = st.columns(5)
 
 with colllll1:
     num_dice = st.number_input("", min_value=0, value=0, key='num_dice_2')
