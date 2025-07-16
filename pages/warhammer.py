@@ -15,7 +15,8 @@ from roll_tools import *
 # st.set_page_config(initial_sidebar_state = "collapsed")
 st.set_page_config(
     layout="wide", 
-    page_title = "Warhammer 40K"
+    page_title = "Warhammer 40K",
+    page_icon = "🧌"
 )
 
 st.title("Attack Dice")
@@ -80,7 +81,10 @@ with st.sidebar:
                 reroll_ones_wound = True
             elif rerolls_wound == "Reroll all":
                 reroll_all_wound = True
-    sustained_hits_nr = st.number_input("Sustained Hits",0,10)
+    if st.checkbox("Sustained hits"):
+        sustained_hits_nr = st.number_input("Sustained Hits",1,10,label_visibility="collapsed")
+    else:
+        sustained_hits_nr = 0
     lethal_hits = st.checkbox("Lethal Hits")
     torrent = st.checkbox("Torrent")
     if st.checkbox("Modify Crit threshholds"):
@@ -90,13 +94,14 @@ with st.sidebar:
         hit_roll_crit=6
         wound_roll_crit=6
     if st.checkbox("Feel No Pain"):
-        feel_no_pain = st.number_input("",2,6,value=6)
+        feel_no_pain = st.number_input("",2,6,value=6,label_visibility="collapsed")
     else:
         feel_no_pain = 0
 
     show_distr = st.checkbox("Show distribution")
 
-    st.write("============================")
+    st.write("")
+    st.write("")
     st.write("Additional ressources:")
     st.page_link("http://wahapedia.ru/", label = "Wahapedia")
     st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
