@@ -65,23 +65,32 @@ def roll(distr, thresh, reroll_ones = False):
     return resulting_distr
 
 @st.cache_data
-def get_amount_of_hits(distr, sustained_hits = 0):
+def get_amount_of_hits(distr, sustained_hits = 0, lethal_hits = False):
     '''
     calculates a 1-d distribution of the amount of successes given the matrix of hits and crits
     here hits and crits are treated the same, so no extra rules implemented yet
     '''
     n = distr.shape[0]
-    if not sustained_hits:
-        resulting_distr = [0]*n
-        for i in range(n):
-            for j in range(i+1):
-                resulting_distr[i] += distr[j,i-j]
-    else:
+    if sustained_hits and not lethal_hits:
         resulting_distr = [0]*((n-1)*(1+sustained_hits)+1)
         for i in range(n):
             for j in range(n):
                 if i+j<=n-1:
                     resulting_distr[i+(sustained_hits+1)*j] += distr[i,j]
+    elif lethal_hits and not sustained_hits:
+        resulting_distr = distr
+    elif lethal_hits and sustained_hits:
+        resulting_distr = np.zeros(((n-1)*sustained_hits+1, len(start_distr)))
+        for i in range(n):
+            for j in range(n):
+                if i+j<=n-1:
+                    resulting_distr[i+sustained_hits*j, j] = distr[i,j]
+    else:
+        resulting_distr = [0]*n
+        for i in range(n):
+            for j in range(i+1):
+                resulting_distr[i] += distr[j,i-j]
+        
     return resulting_distr
 
 def get_dicesum(nr_dice, bias, dice_size):
@@ -146,34 +155,64 @@ col1, col2, col3 = st.columns(3)
 ### HIT ROLL
 
 with col1:
-    hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit)
-    hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr)
-    fig, ax = plt.subplots()
-    ax.bar(range(len(hit_roll_hits)),hit_roll_hits)
-    ax.set_xticks(range(0,len(hit_roll_hits)+1,np.max([1,len(hit_roll_hits)//10])))
-    ax.set_title("Amount of hits")
-    ax.set_ylabel("Density")
-    ax2 = ax.twinx()
-    ax2.plot(range(len(hit_roll_hits)), np.cumsum(hit_roll_hits), color='red', marker='o', linestyle='-', label='Probability')
-    ax2.set_ylabel('Distribution')
-    st.pyplot(fig)
-    expected_1 = 0
-    for i in range(len(hit_roll_hits)):
-        expected_1 += i*hit_roll_hits[i]
-    f"Expected number of hits: {np.round(expected_1,3)}"
+    if not torrent: 
+        hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones_hit)
+        hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, lethal_hits=lethal_hits)
+    else:
+        hit_roll_hits = start_distr
+
+    if not lethal_hits:
+        fig, ax = plt.subplots()
+        ax.bar(range(len(hit_roll_hits)),hit_roll_hits)
+        ax.set_xticks(range(0,len(hit_roll_hits)+1,np.max([1,len(hit_roll_hits)//10])))
+        ax.set_title("Amount of hits")
+        ax.set_ylabel("Density")
+        ax2 = ax.twinx()
+        ax2.plot(range(len(hit_roll_hits)), np.cumsum(hit_roll_hits), color='red', marker='o', linestyle='-', label='Probability')
+        ax2.set_ylabel('Distribution')
+        st.pyplot(fig)
+        expected_1 = 0
+        for i in range(len(hit_roll_hits)):
+            expected_1 += i*hit_roll_hits[i]
+        f"Expected number of hits: {np.round(expected_1,3)}"
+    else:
+        hits = hit_roll_hits.sum(axis=1)
+        crits = hit_roll_hits.sum(axis=0)
+        if len(hits)>len(crits):
+            crits = np.pad(crits, (0, len(hits)-len(crits)), mode="constant")
+        width = 0.35
+        fig, ax = plt.subplots()
+        ax.bar(np.arange(len(hits))-width/2,hits,width, label = "Hits", color = "blue")
+        ax.bar(np.arange(len(hits))+width/2,crits,width, label = "Crits", color = "red")
+        ax.set_xticks(range(0,len(hits)+1,np.max([1,len(hits)//10])))
+        ax.set_title("Amount of hits")
+        ax.set_ylabel("Density")
+        ax2 = ax.twinx()
+        ax2.plot(range(len(hits)), np.cumsum(hits), color='blue', marker='o', linestyle='-', label='Hits')
+        ax2.plot(range(len(crits)), np.cumsum(crits), color='red', marker='o', linestyle='-', label='Crits')
+        ax2.set_ylabel('Distribution')
+        ax.legend(loc = "upper left")
+        st.pyplot(fig)
+        expected_1 = 0
+        for i in range(len(hits)):
+            expected_1 += i*hits[i]
+        f"Expected number of hits: {np.round(expected_1,3)}"
+        expected_1 = 0
+        for i in range(len(crits)):
+            expected_1 += i*crits[i]
+        f"Expected number of crits: {np.round(expected_1,3)}"
 
 
 ### WOUND ROLL
 with col2:
-    if not lethal_hits and not torrent:
+    if not torrent and not lethal_hits:
         wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones_wound)
         wound_roll_hits = get_amount_of_hits(wound_roll)
-    elif torrent:
-        # Torrent rules skip the Hit roll
-        wound_roll_hits = hit_roll_hits
-    elif lethal_hits:
-        # Lethal Hits
-        pass
+    elif not torrent and lethal_hits:
+        wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1])
+        for i in range(hit_roll_hits.shape[1]):
+            wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones_wound)
+            wound_roll_hits[i:i+hit_roll_hits.shape[0]+1] = [x + y for x, y in zip(wound_roll_hits[i:i+hit_roll_hits.shape[0]+1], get_amount_of_hits(wound_roll))]
 
     fig, ax = plt.subplots()
     # num_dice might need to be changed once sustained hits appear
@@ -195,6 +234,7 @@ with col2:
 # save roll of 2 (removing a hit on 2+) is equivalent to hitting on 6
 
 with col3:
+
     save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
     save_roll_hits = get_amount_of_hits(save_roll)
 
@@ -235,19 +275,22 @@ if st.checkbox("Show distribution"):
 if st.checkbox("Show cool plotz"):
     colll1, colll2 = st.columns(2)
     with colll1:
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection = "3d")
-        x = np.arange(hit_roll.shape[1])
-        y = np.arange(hit_roll.shape[0])
-        X,Y = np.meshgrid(x,y)
-        Z = hit_roll
-        surf = ax.plot_surface(X, Y, Z, cmap='viridis')
-        ax.set_title('Hitroll')
-        ax.set_xlabel('Crits')
-        ax.set_ylabel('Hits')
-        ax.set_zlabel('Value')
-        fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
-        st.pyplot(fig)
+        if not torrent: #and not lethal_hits:
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection = "3d")
+            x = np.arange(hit_roll.shape[1])
+            y = np.arange(hit_roll.shape[0])
+            X,Y = np.meshgrid(x,y)
+            Z = hit_roll
+            surf = ax.plot_surface(X, Y, Z, cmap='viridis')
+            ax.set_title('Hitroll')
+            ax.set_xlabel('Crits')
+            ax.set_ylabel('Hits')
+            ax.set_zlabel('Value')
+            fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+            st.pyplot(fig)
+        else:
+            st.write("No Hitroll plot when torrent or lethal_hits is active")
     with colll2:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection = "3d")
