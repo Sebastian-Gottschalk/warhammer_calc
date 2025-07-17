@@ -79,21 +79,21 @@ def roll(distr, thresh, reroll_ones = False,critting_on=6,reroll_all = False):
     return resulting_distr
 
 @st.cache_data
-def get_amount_of_hits(distr, sustained_hits = 0, lethal_hits = False):
+def get_amount_of_hits(distr, sustained_hits = 0, crit_auto_hit = False):
     '''
     calculates a 1-d distribution of the amount of successes given the matrix of hits and crits
     here hits and crits are treated the same, so no extra rules implemented yet
     '''
     n = distr.shape[0]
-    if sustained_hits and not lethal_hits:
+    if sustained_hits and not crit_auto_hit:
         resulting_distr = [0]*((n-1)*(1+sustained_hits)+1)
         for i in range(n):
             for j in range(n):
                 if i+j<=n-1:
                     resulting_distr[i+(sustained_hits+1)*j] += distr[i,j]
-    elif lethal_hits and not sustained_hits:
+    elif crit_auto_hit and not sustained_hits:
         resulting_distr = distr
-    elif lethal_hits and sustained_hits:
+    elif crit_auto_hit and sustained_hits:
         resulting_distr = np.zeros(((n-1)*sustained_hits+1, distr.shape[1]))
         for i in range(n):
             for j in range(n):

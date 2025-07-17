@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from mpl_toolkits.mplot3d import Axes3D
 from roll_tools import *
+import base64
 
 
 
@@ -19,11 +20,35 @@ st.set_page_config(
     page_icon = "🧌"
 )
 
+side_bg = "img/kroot_2.png"
+side_bg_ext = "png"
+with open(side_bg, "rb") as image_file:
+    encoded_string = base64.b64encode(image_file.read()).decode()
+st.markdown(
+    f"""
+    <style>
+    [data-testid="stAppViewContainer"] {{
+        background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
+                url(data:image/{side_bg_ext};base64,{encoded_string});
+        background-size : 70%;
+        background-repeat: no-repeat;
+        background-position: center;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
 _,col_title_1,_ = st.columns([1.25,1,1])
+
+
 with col_title_1:
     st.title("Attack Dice")
 
 _,coll1, coll2, coll3,_ = st.columns(5)
+
+
 with coll1:
     num_dice = st.number_input("Dice", min_value=0, value=0, key='num_dice')
 
@@ -35,12 +60,14 @@ with coll2:
 with coll3:
     modifier = st.number_input("Modifier", value=3, key='modifier', min_value=0)
 
+
 start_distr = get_dicesum(num_dice, modifier, dice_size)
 _,col_title_2,_ = st.columns([1.15,1,1])
 with col_title_2:
     st.title("Damage Profile")
 
 _,colllll1, colllll2, colllll3,_ = st.columns(5)
+
 
 with colllll1:
     num_dice = st.number_input("", min_value=0, value=0, key='num_dice_2')
@@ -52,6 +79,8 @@ with colllll2:
 
 with colllll3:
     modifier = st.number_input("", value=3, key='modifier_2', min_value=0)
+
+
     
 damage_distr = get_dicesum(num_dice, modifier, dice_size)
 
@@ -66,6 +95,25 @@ with co3:
     dice_threshhold_3 = st.number_input("Saving on",2,6, value=4)
 
 with st.sidebar:
+    side_bg = "img/kroot.png"
+    side_bg_ext = "png"
+    with open(side_bg, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stSidebar"] > div:first-child {{
+            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
+                    url(data:image/{side_bg_ext};base64,{encoded_string});
+            background-size : contain;
+            background-repeat: no-repeat;
+            background-position: center 75%;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     reroll = st.checkbox("Rerolls")
     reroll_ones_hit = False
     reroll_all_hit = False
@@ -90,6 +138,7 @@ with st.sidebar:
     else:
         sustained_hits_nr = 0
     lethal_hits = st.checkbox("Lethal Hits")
+    dev_wounds = st.checkbox("Dev Wounds")
     torrent = st.checkbox("Torrent")
     if st.checkbox("Modify Crit threshholds"):
         hit_roll_crit = st.number_input("Hit roll critting on",dice_threshhold_1,6,value=6)
@@ -121,7 +170,7 @@ else:
 with col1:
     if not torrent: 
         hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones=reroll_ones_hit, critting_on=hit_roll_crit, reroll_all=reroll_all_hit)
-        hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, lethal_hits=lethal_hits)
+        hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, crit_auto_hit=lethal_hits)
     else:
         hit_roll_hits = start_distr
     
@@ -175,33 +224,71 @@ with col1:
 
 with col2:
     if lethal_hits and not torrent:
-        wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1)
-        for i in range(hit_roll_hits.shape[1]):
-            wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on=wound_roll_crit, reroll_all=reroll_all_wound)
-            wound_roll_hits[i:i+hit_roll_hits.shape[0]] += np.array(get_amount_of_hits(wound_roll))
-        if not sustained_hits_nr:
-            wound_roll_hits=wound_roll_hits[0:hit_roll_hits.shape[0]]
+        if not dev_wounds:
+            wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1)
+            for i in range(hit_roll_hits.shape[1]):
+                wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on=wound_roll_crit, reroll_all=reroll_all_wound)
+                wound_roll_hits[i:i+hit_roll_hits.shape[0]] += np.array(get_amount_of_hits(wound_roll))
+            if not sustained_hits_nr:
+                wound_roll_hits=wound_roll_hits[0:hit_roll_hits.shape[0]]
+        else: # Devestating wounds + Lethal Hits
+            wound_roll_hits = np.zeros((hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1,hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1))
+            for i in range(hit_roll_hits.shape[1]):
+                new_roll = single_roll(i, dice_threshhold_2, reroll_ones=reroll_all_wound, critting_on=wound_roll_crit,reroll_all=reroll_all_wound)
+                for k in range(hit_roll_hits.shape[1]):
+                    wound_roll_hits[k:k+i+1,0:i+1]+=hit_roll_hits[i,k] * new_roll
+        
+            
     else:
         wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on= wound_roll_crit, reroll_all=reroll_all_wound)
-        wound_roll_hits = get_amount_of_hits(wound_roll)
-        
+        wound_roll_hits = get_amount_of_hits(wound_roll, crit_auto_hit=dev_wounds)
 
     wound_roll_plot = get_threshhold_plot(wound_roll_hits)
 
-    fig, ax = plt.subplots()
-    ax.bar(range(len(wound_roll_plot)),wound_roll_plot)
-    ax.set_xticks(range(0,len(wound_roll_plot),np.max([1,len(wound_roll_plot)//10])))
-    ax.set_title("Wound roll")
-    ax.set_ylabel("Density")
-    ax2 = ax.twinx()
-    ax2.plot(range(len(wound_roll_plot)), np.cumsum(wound_roll_plot), color='blue', marker='o', linestyle='-', label='Probability')
-    ax2.set_ylabel('Distribution')
-    ax2.set_ylim([0,1])
-    col2.pyplot(fig)
-    expected_2 = 0
-    for i in range(len(wound_roll_hits)):
-        expected_2 += i*wound_roll_hits[i]
-    f"Expected number of hits: {np.round(expected_2,3)}"
+    if not dev_wounds:
+
+        fig, ax = plt.subplots()
+        ax.bar(range(len(wound_roll_plot)),wound_roll_plot)
+        ax.set_xticks(range(0,len(wound_roll_plot),np.max([1,len(wound_roll_plot)//10])))
+        ax.set_title("Wound roll")
+        ax.set_ylabel("Density")
+        ax2 = ax.twinx()
+        ax2.plot(range(len(wound_roll_plot)), np.cumsum(wound_roll_plot), color='blue', marker='o', linestyle='-', label='Probability')
+        ax2.set_ylabel('Distribution')
+        ax2.set_ylim([0,1])
+        col2.pyplot(fig)
+        expected_2 = 0
+        for i in range(len(wound_roll_hits)):
+            expected_2 += i*wound_roll_hits[i]
+        f"Expected number of hits: {np.round(expected_2,3)}"
+    else:
+        hits = wound_roll_hits.sum(axis=1)
+        crits = wound_roll_hits.sum(axis=0)
+        if len(hits)>len(crits):
+            crits = np.pad(crits, (0, len(hits)-len(crits)), mode="constant")
+        
+        [hits_plot, crits_plot] = get_threshhold_plot([hits,crits], multi_list=True)
+        
+        width = 0.35
+        fig, ax = plt.subplots()
+        ax.bar(np.arange(len(hits_plot))-width/2,hits_plot,width, label = "Hits", color = "blue")
+        ax.bar(np.arange(len(hits_plot))+width/2,crits_plot,width, label = "Crits", color = "red")
+        ax.set_xticks(range(0,len(hits_plot)+1,np.max([1,len(hits_plot)//10])))
+        ax.set_title("Hit roll")
+        ax.set_ylabel("Density")
+        ax2 = ax.twinx()
+        ax2.plot(range(len(hits_plot)), np.cumsum(hits_plot), color='blue', marker='o', linestyle='-', label='Hits')
+        ax2.plot(range(len(crits_plot)), np.cumsum(crits_plot), color='red', marker='o', linestyle='-', label='Crits')
+        ax2.set_ylabel('Distribution')
+        ax2.set_ylim([0,1])
+        ax.legend(loc = "upper left")
+        st.pyplot(fig)
+        expected_1 = 0
+        expected_1_2 = 0
+        for i in range(len(hits)):
+            expected_1 += i*hits[i]
+            expected_1_2 += i*crits[i]
+        f"Expected number of hits / crits: {np.round(expected_1,3)} / {np.round(expected_1_2,3)}"
 
 
 ### SAVE ROLL
@@ -209,8 +296,15 @@ with col2:
 
 with col3:
 
-    save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
-    save_roll_hits = get_amount_of_hits(save_roll)
+    if dev_wounds:
+        save_roll_hits = [0]*(wound_roll_hits.shape[0]+wound_roll_hits.shape[1]-1)
+        for i in range(wound_roll_hits.shape[1]):
+            save_roll = roll(wound_roll_hits[:,i], dice_threshhold_3)
+            save_roll_hits[i:i+wound_roll_hits.shape[0]] += np.array(get_amount_of_hits(save_roll))
+        save_roll_hits=save_roll_hits[0:wound_roll_hits.shape[0]]
+    else:
+        save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
+        save_roll_hits = get_amount_of_hits(save_roll)
 
     save_roll_plot = get_threshhold_plot(save_roll_hits)
 
@@ -284,8 +378,8 @@ if feel_no_pain:
 if show_distr:
     col_distr_1, col_distr_2 = st.columns([1,3])
     with col_distr_1:
-        if lethal_hits:
-            st.write("Our engineers are working on a solution to display the distribution for lethal hits.")
+        if lethal_hits or dev_wounds:
+            st.write("Our engineers are working on a solution to display the distribution for lethal hits / Dev wounds.")
         else:
             data = [
                 hit_roll_hits,

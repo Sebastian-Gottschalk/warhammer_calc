@@ -5,4 +5,4 @@ st.set_page_config(
     page_icon="👋",
 )
 
-st.write("This is a test page here")
+st.write("Welcome to the multipage streamlit app. Theres nothing on this page yet.")
