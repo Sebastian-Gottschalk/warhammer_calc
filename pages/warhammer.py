@@ -20,25 +20,6 @@ st.set_page_config(
     page_icon = "🧌"
 )
 
-side_bg = "img/kroot_2.png"
-side_bg_ext = "png"
-with open(side_bg, "rb") as image_file:
-    encoded_string = base64.b64encode(image_file.read()).decode()
-st.markdown(
-    f"""
-    <style>
-    [data-testid="stAppViewContainer"] {{
-        background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
-                url(data:image/{side_bg_ext};base64,{encoded_string});
-        background-size : 70%;
-        background-repeat: no-repeat;
-        background-position: center;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 
 _,col_title_1,_ = st.columns([1.25,1,1])
 
@@ -155,10 +136,35 @@ with st.sidebar:
 
     st.write("")
     st.write("")
+    show_kroot = st.radio("show_kroot",["Kroot, das ist kroot", "Halp, im a space marine and scared of pictures"],label_visibility="collapsed")
+    if show_kroot == "Kroot, das ist kroot":
+        show_kroot = True
+    else:
+        show_kroot = False
     st.write("Additional ressources:")
     st.page_link("http://wahapedia.ru/", label = "Wahapedia")
     st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
     st.page_link("https://www.linkedin.com/in/josua-keil-10546a311/", label = "Show me some Orc pictures")
+
+if show_kroot:
+    side_bg = "img/kroot_2.png"
+    side_bg_ext = "png"
+    with open(side_bg, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
+                    url(data:image/{side_bg_ext};base64,{encoded_string});
+            background-size : 70%;
+            background-repeat: no-repeat;
+            background-position: center;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
 if feel_no_pain:
     col1, col2,col3,col4, col5= st.columns(5)
@@ -347,6 +353,8 @@ with col4:
     expected_4 = 0
     for i in range(len(damage_roll)):
         expected_4 += i*damage_roll[i]
+    st.latex(r"""\mathbb{E}(\text{Damge} = )
+             """)
     f"Expected number of wounds: {np.round(expected_4,3)}"
 
 if feel_no_pain:
