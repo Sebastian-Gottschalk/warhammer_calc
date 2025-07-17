@@ -341,7 +341,6 @@ with col3:
 ### DAMAGE ROLL
 
 with col4:
-    st.write(len(damage_distr), len(save_roll_hits))
     damage_roll = np.zeros((len(save_roll_hits)-1)*(len(damage_distr)-1)+1)
     damage_distr_cur = np.array([1])
     for i, prob in enumerate(save_roll_hits):
@@ -393,6 +392,10 @@ if feel_no_pain:
 
 if show_distr:
     col_distr_1, col_distr_2 = st.columns([1,3])
+
+# TO- DO:
+# The dataframe currently has too many columns with 0s when displaying Lethal Hits AND Dev Wounds at the same time
+
     with col_distr_1:
         data = []
         idx_tuple = []
@@ -427,16 +430,16 @@ if show_distr:
         if dev_wounds:
             hits = wound_roll_hits.sum(axis=1)
             crits = wound_roll_hits.sum(axis=0)
-            data.append([
+            data += [
                 hits,
                 list(pd.Series(hits).cumsum()),
                 crits,
                 list(pd.Series(crits).cumsum()),
-            ])
-            idx_tuple.append([
+            ]
+            idx_tuple += [
                 ("Wound - Crit", "P(X=x)"),
                 ("Wound - Crit", "P(X<=x)")
-            ])
+            ]
         else:
             data +=[
                 wound_roll_hits,
