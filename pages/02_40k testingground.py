@@ -82,23 +82,7 @@ with co3:
     else:
         no_save_roll=False
 
-co1, co2 = st.columns(2)
-fight_troop = st.checkbox("Shoot on dudes")
 
-if fight_troop:
-    with co1:
-        amount_of_troops = st.number_input("Amount of units",1,100,value=10)
-    with co2:
-        wounds_per_troop = st.number_input("Wounds per unit",1,20,value=3)
-    troops = np.zeros((wounds_per_troop+1,amount_of_troops))
-    troops[wounds_per_troop,0] = 1
-else:
-    troops = 0
-
-
-
-
-plot_results = st.checkbox("Plot Results", value = True)
 
 with st.sidebar:
     
@@ -142,6 +126,22 @@ with st.sidebar:
         feel_no_pain = st.number_input("",2,6,value=6,label_visibility="collapsed")
     else:
         feel_no_pain = 0
+
+    fight_troop = st.checkbox("Shoot on dudes")
+
+    if fight_troop:
+        co1, co2 = st.columns(2)
+        with co1:
+            amount_of_troops = st.number_input("Amount of units",1,100,value=10)
+        with co2:
+            wounds_per_troop = st.number_input("Wounds per unit",1,20,value=3)
+        troops = np.zeros((wounds_per_troop+1,amount_of_troops))
+        troops[wounds_per_troop,0] = 1
+    else:
+        troops = 0
+
+    
+    plot_results = st.checkbox("Plot Results", value = True)
 
     show_distr = st.checkbox("Show distribution")
 

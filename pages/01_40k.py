@@ -83,6 +83,7 @@ with co3:
         no_save_roll=False
 
 
+
 with st.sidebar:
     
     reroll = st.checkbox("Rerolls")
@@ -126,8 +127,23 @@ with st.sidebar:
     else:
         feel_no_pain = 0
 
-    show_distr = st.checkbox("Show distribution")
+    fight_troop = st.checkbox("Shoot on dudes")
+
+    if fight_troop:
+        co1, co2 = st.columns(2)
+        with co1:
+            amount_of_troops = st.number_input("Amount of units",1,100,value=10)
+        with co2:
+            wounds_per_troop = st.number_input("Wounds per unit",1,20,value=3)
+        troops = np.zeros((wounds_per_troop+1,amount_of_troops))
+        troops[wounds_per_troop,0] = 1
+    else:
+        troops = 0
+
+    
     plot_results = st.checkbox("Plot Results", value = True)
+
+    show_distr = st.checkbox("Show distribution")
 
     st.write("")
     st.write("")
@@ -181,15 +197,12 @@ if show_kroot:
         unsafe_allow_html=True
     )
 
-####
-# MISSING FEATURES / INPUTS IN MAIN RIGHT NOW:
-# troops
-####
+
 
 complete_roll(
     start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
     hit_roll_crit,wound_roll_crit,damage_distr,
     reroll_ones_hit,reroll_all_hit,reroll_ones_wound,reroll_all_wound,
     sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain,
-    plot_results, show_distr, troops = 0
+    plot_results, show_distr, troops
 )

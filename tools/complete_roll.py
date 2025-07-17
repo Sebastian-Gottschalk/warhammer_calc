@@ -17,7 +17,7 @@ def complete_roll(
 
     no_save_roll = dice_threshhold_3==7
 
-    if feel_no_pain:
+    if feel_no_pain and not np.sum(troops):
         col1, col2,col3,col4, col5= st.columns(5)
     else:
         col1, col2,col3,col4= st.columns(4)
@@ -87,35 +87,46 @@ def complete_roll(
 
 
     ### DAMAGE ROLL
+    ### OR
+    ### DISTRIBUTION OF GUYS SHOT
 
     with col4:
-        damage_roll = np.zeros((len(save_roll_hits)-1)*(len(damage_distr)-1)+1)
-        damage_distr_cur = np.array([1])
-        for i, prob in enumerate(save_roll_hits):
-            damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
-            damage_distr_cur = np.convolve(damage_distr_cur,damage_distr)
+        if np.sum(troops):
+            shooting_result = shoot_on_troop(save_roll_hits, damage_distr, troops, feel_no_pain)
+            if np.sum(shooting_result)<1:
+                shooting_result[0,-1]+=1-np.sum(shooting_result)
+            if plot_results:
+                st.write(plot_result(
+                    shooting_result[1:,:].sum(axis=0).tolist() + [shooting_result[0,-1]],
+                    False,col4,"dead Unit"
+                ))
+            st.write(f"Chance for annihilation: {np.round(100*shooting_result[0,-1],2)}%")
+        else:
+            damage_roll = np.zeros((len(save_roll_hits)-1)*(len(damage_distr)-1)+1)
+            damage_distr_cur = np.array([1])
+            for i, prob in enumerate(save_roll_hits):
+                damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
+                damage_distr_cur = np.convolve(damage_distr_cur,damage_distr)
 
-        if plot_results:
-            st.write(plot_result(damage_roll,False,col4,"Damage",custom_text="Damage"))
+            if plot_results:
+                st.write(plot_result(damage_roll,False,col4,"Damage",custom_text="Damage"))
 
     ### FEEL NO PAIN
 
-    if feel_no_pain:
-        with col5:
-            damage_fnp = [0]*len(damage_roll)
-            prob_fnp = (feel_no_pain-1)/6 # probability that the feel no pain roll misses
-            for n in range(len(damage_roll)):
-                for k in range(n+1):
-                    prob = binom.pmf(k,n,prob_fnp)
-                    damage_fnp[k]+=prob*damage_roll[n]
-            
-            if plot_results:
-                st.write(plot_result(damage_fnp,False,col5,"Feel no Pain",custom_text="Damage after FnP"))
 
-    if np.sum(troops):
-        shooting_result = shoot_on_troop(save_roll_hits, damage_distr, troops, feel_no_pain)
-        st.write(f"Chance for annihilation: {np.round(100*shooting_result[0,-1],2)}%")
-        st.write(shooting_result)
+    if feel_no_pain and not np.sum(troops):
+        with col5:
+            if feel_no_pain:
+                damage_fnp = [0]*len(damage_roll)
+                prob_fnp = (feel_no_pain-1)/6 # probability that the feel no pain roll misses
+                for n in range(len(damage_roll)):
+                    for k in range(n+1):
+                        prob = binom.pmf(k,n,prob_fnp)
+                        damage_fnp[k]+=prob*damage_roll[n]
+                
+                if plot_results:
+                    st.write(plot_result(damage_fnp,False,col5,"Feel no Pain",custom_text="Damage after FnP"))
+
 
     if show_distr:
         col_distr_1, col_distr_2 = st.columns([1,3])
@@ -187,12 +198,23 @@ def complete_roll(
             st.dataframe(pd.DataFrame(data, index=index))
 
         with col_distr_2:
-            data = [
-                damage_roll,
-                list(pd.Series(damage_roll).cumsum())
-            ]
-            index = pd.MultiIndex.from_tuples([
-                ('Damage', 'P(X=x)'),
-                ('Damage', 'P(X<=x)'),
-            ])
+            if np.sum(troops):
+                troops_killed = shooting_result[1:,:].sum(axis=0).tolist() + [shooting_result[0,-1]]
+                data = [
+                    troops_killed,
+                    list(pd.Series(troops_killed).cumsum())
+                ]
+                index = pd.MultiIndex.from_tuples([
+                    ('Units killed', 'P(X=x)'),
+                    ('Units killed', 'P(X<=x)'),
+                ])
+            else:
+                data = [
+                    damage_roll,
+                    list(pd.Series(damage_roll).cumsum())
+                ]
+                index = pd.MultiIndex.from_tuples([
+                    ('Damage', 'P(X=x)'),
+                    ('Damage', 'P(X<=x)'),
+                ])
             st.dataframe(pd.DataFrame(data, index=index))
