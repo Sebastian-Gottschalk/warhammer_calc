@@ -198,6 +198,8 @@ if show_kroot:
     )
 
 
+if sustained_hits_nr>=2 and lethal_hits and dev_wounds:
+    st.write("The plots and future calculations are wrong. To-do: fix")
 
 complete_roll(
     start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,

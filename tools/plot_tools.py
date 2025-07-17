@@ -56,6 +56,8 @@ def plot_result(hit_roll, auto_crit, col, title, custom_text = None):
 
 def get_threshhold_plot(dice_roll, threshhold = 0.999, multi_list = False):
     if not multi_list:
+        if np.sum(dice_roll)<=0.999:
+            return dice_roll
         dice_roll_cumsum = np.cumsum(dice_roll)
         dice_roll_index = np.argmax(dice_roll_cumsum>0.999)
         dice_roll_index = min(dice_roll_index+1, len(dice_roll))
