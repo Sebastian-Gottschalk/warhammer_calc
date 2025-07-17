@@ -394,25 +394,65 @@ if feel_no_pain:
 if show_distr:
     col_distr_1, col_distr_2 = st.columns([1,3])
     with col_distr_1:
-        if lethal_hits or dev_wounds:
-            st.write("Our engineers are working on a solution to display the distribution for lethal hits / Dev wounds.")
+        data = []
+        idx_tuple = []
+
+        idx_tuple += [
+                ("Hit", "P(X=x)"),
+                ("Hit", "P(X<=x)")
+        ]
+        if lethal_hits:        
+            hits = hit_roll_hits.sum(axis=1)
+            crits = hit_roll_hits.sum(axis=0)
+            data += [
+                hits,
+                list(pd.Series(hits).cumsum()),
+                crits,
+                list(pd.Series(crits).cumsum()),
+            ]
+            idx_tuple += [
+                ("Hit - Crit", "P(X=x)"),
+                ("Hit - Crit", "P(X<=x)")
+            ]
         else:
-            data = [
+            data += [
                 hit_roll_hits,
                 list(pd.Series(hit_roll_hits).cumsum()),
+            ]
+
+        idx_tuple +=[
+                ("Wound", "P(X=x)"),
+                ("Wound", "P(X<=x)")
+        ]
+        if dev_wounds:
+            hits = wound_roll_hits.sum(axis=1)
+            crits = wound_roll_hits.sum(axis=0)
+            data.append([
+                hits,
+                list(pd.Series(hits).cumsum()),
+                crits,
+                list(pd.Series(crits).cumsum()),
+            ])
+            idx_tuple.append([
+                ("Wound - Crit", "P(X=x)"),
+                ("Wound - Crit", "P(X<=x)")
+            ])
+        else:
+            data +=[
                 wound_roll_hits,
                 list(pd.Series(wound_roll_hits).cumsum()),
-                save_roll_hits,
-                list(pd.Series(save_roll_hits).cumsum()),
             ]
-            index = pd.MultiIndex.from_tuples([
-                ('Hit', 'P(X=x)'),
-                ('Hit', 'P(X<=x)'),
-                ('Wound', 'P(X=x)'),
-                ('Wound', 'P(X<=x)'),
-                ('Save', 'P(X=x)'),
-                ('Save', 'P(X<=x)'),
-            ])
+            
+        data +=[
+            save_roll_hits,
+            list(pd.Series(save_roll_hits).cumsum())
+            ]
+        idx_tuple += [
+            ('Save', 'P(X=x)'),
+            ('Save', 'P(X<=x)')
+        ]
+
+        index = pd.MultiIndex.from_tuples(idx_tuple)
             st.dataframe(pd.DataFrame(data, index=index))
 
     with col_distr_2:
