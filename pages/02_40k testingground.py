@@ -64,6 +64,7 @@ with colllll3:
     modifier = st.number_input("", value=3, key='modifier_2', min_value=0)
 
 
+
     
 damage_distr = get_dicesum(num_dice, modifier, dice_size)
 
@@ -80,6 +81,8 @@ with co3:
         no_save_roll = True
     else:
         no_save_roll=False
+
+plot_results = st.checkbox("Plot Results", value = True)
 
 with st.sidebar:
     
@@ -180,90 +183,10 @@ if show_kroot:
 
 
 
-
 complete_roll(
     start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
     hit_roll_crit,wound_roll_crit,damage_distr,
     reroll_ones_hit,reroll_all_hit,reroll_ones_wound,reroll_all_wound,
-    sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain
+    sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain,
+    plot_results, show_distr
 )
-
-
-if show_distr:
-    col_distr_1, col_distr_2 = st.columns([1,3])
-
-# TO- DO:
-# The dataframe currently has too many columns with 0s when displaying Lethal Hits AND Dev Wounds at the same time
-
-    with col_distr_1:
-        data = []
-        idx_tuple = []
-
-        idx_tuple += [
-                ("Hit", "P(X=x)"),
-                ("Hit", "P(X<=x)")
-        ]
-        if lethal_hits:        
-            hits = hit_roll_hits.sum(axis=1)
-            crits = hit_roll_hits.sum(axis=0)
-            data += [
-                hits,
-                list(pd.Series(hits).cumsum()),
-                crits,
-                list(pd.Series(crits).cumsum()),
-            ]
-            idx_tuple += [
-                ("Hit - Crit", "P(X=x)"),
-                ("Hit - Crit", "P(X<=x)")
-            ]
-        else:
-            data += [
-                hit_roll_hits,
-                list(pd.Series(hit_roll_hits).cumsum()),
-            ]
-
-        idx_tuple +=[
-                ("Wound", "P(X=x)"),
-                ("Wound", "P(X<=x)")
-        ]
-        if dev_wounds:
-            hits = wound_roll_hits.sum(axis=1)
-            crits = wound_roll_hits.sum(axis=0)
-            data += [
-                hits,
-                list(pd.Series(hits).cumsum()),
-                crits,
-                list(pd.Series(crits).cumsum()),
-            ]
-            idx_tuple += [
-                ("Wound - Crit", "P(X=x)"),
-                ("Wound - Crit", "P(X<=x)")
-            ]
-        else:
-            data +=[
-                wound_roll_hits,
-                list(pd.Series(wound_roll_hits).cumsum()),
-            ]
-            
-        data +=[
-            save_roll_hits,
-            list(pd.Series(save_roll_hits).cumsum())
-            ]
-        idx_tuple += [
-            ('Save', 'P(X=x)'),
-            ('Save', 'P(X<=x)')
-        ]
-
-        index = pd.MultiIndex.from_tuples(idx_tuple)
-        st.dataframe(pd.DataFrame(data, index=index))
-
-    with col_distr_2:
-        data = [
-            damage_roll,
-            list(pd.Series(damage_roll).cumsum())
-        ]
-        index = pd.MultiIndex.from_tuples([
-            ('Damage', 'P(X=x)'),
-            ('Damage', 'P(X<=x)'),
-        ])
-        st.dataframe(pd.DataFrame(data, index=index))

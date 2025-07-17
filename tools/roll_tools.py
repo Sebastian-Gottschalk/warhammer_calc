@@ -120,19 +120,26 @@ def get_dicesum(nr_dice, bias, dice_size):
         return resulting_distr
     else: # in case nr_dice = 0
         return [0]*bias+[1]
+
+
+def get_wound_threshhold(strength, toughness,modifier = 0, fixed_value = 0):
+    if fixed_value:
+        return fixed_value
     
-def get_threshhold_plot(dice_roll, threshhold = 0.999, multi_list = False):
-    if not multi_list:
-        dice_roll_cumsum = np.cumsum(dice_roll)
-        dice_roll_index = np.argmax(dice_roll_cumsum>0.999)
-        dice_roll_index = min(dice_roll_index+1, len(dice_roll))
-        return dice_roll[:dice_roll_index]
-    if multi_list:
-        max_index = 0
-        for i in range(len(dice_roll)):
-            dice_roll_cumsum = np.cumsum(dice_roll[i])
-            dice_roll_index = np.argmax(dice_roll_cumsum>0.999)
-            dice_roll_index = min(dice_roll_index+1, len(dice_roll[i]))
-            if dice_roll_index>max_index:
-                max_index = dice_roll_index
-        return [dice_result[:max_index] for dice_result in dice_roll]
+    if strength >= 2*toughness:
+        return_value =  2
+    elif strength > toughness:
+        return_value =  3
+    elif strength == toughness:
+        return_value =  4
+    elif strength >toughness/2:
+        return_value =  5
+    else:
+        return_value =  6
+    
+    # add the modifier and clip it into the range from 2 to 6
+    return_value += modifier
+    return_value = np.min(return_value, 6)
+    return_value = np.max(return_value, 2)
+    
+    return return_value

@@ -2,6 +2,7 @@ import streamlit as st
 from tools.roll_tools import *
 from tools.plot_tools import *
 from scipy.stats import  multinomial, binom
+import pandas as pd
 
 
 
@@ -11,7 +12,7 @@ def complete_roll(
         hit_roll_crit,wound_roll_crit, damage_distr,
         reroll_ones_hit, reroll_all_hit, reroll_ones_wound, reroll_all_wound,
         sustained_hits_nr, lethal_hits,dev_wounds, torrent,
-        feel_no_pain
+        feel_no_pain, plot_results, show_distr
         ):
 
     no_save_roll = dice_threshhold_3==7
@@ -30,7 +31,8 @@ def complete_roll(
         else:
             hit_roll_hits = start_distr
         
-        st.write(plot_result(hit_roll_hits, lethal_hits,col1,"Hit"))
+        if plot_results:
+            st.write(plot_result(hit_roll_hits, lethal_hits,col1,"Hit"))
 
 
 
@@ -58,8 +60,8 @@ def complete_roll(
             wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on= wound_roll_crit, reroll_all=reroll_all_wound)
             wound_roll_hits = get_amount_of_hits(wound_roll, crit_auto_hit=dev_wounds)
 
-
-        st.write(plot_result(wound_roll_hits, dev_wounds, col2, "Wound"))
+        if plot_results:
+            st.write(plot_result(wound_roll_hits, dev_wounds, col2, "Wound"))
     
 
     ### SAVE ROLL
@@ -80,7 +82,8 @@ def complete_roll(
             save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
             save_roll_hits = get_amount_of_hits(save_roll)
 
-        st.write(plot_result(save_roll_hits,False,col3,"Save",custom_text="failed Saves"))
+        if plot_results:
+            st.write(plot_result(save_roll_hits,False,col3,"Save",custom_text="failed Saves"))
 
 
     ### DAMAGE ROLL
@@ -92,15 +95,10 @@ def complete_roll(
             damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
             damage_distr_cur = np.convolve(damage_distr_cur,damage_distr)
 
-        st.write(
-            plot_result(
-                damage_roll,
-                False,
-                col4,
-                "Damage",
-                custom_text="Damage"
-            )
-        )
+        if plot_results:
+            st.write(plot_result(damage_roll,False,col4,"Damage",custom_text="Damage"))
+
+    ### FEEL NO PAIN
 
     if feel_no_pain:
         with col5:
@@ -111,10 +109,84 @@ def complete_roll(
                     prob = binom.pmf(k,n,prob_fnp)
                     damage_fnp[k]+=prob*damage_roll[n]
             
-            st.write(plot_result(
-                damage_fnp,
-                False,
-                col5,
-                "Feel no Pain",
-                custom_text="Damage after FnP"
-            ))
+            if plot_results:
+                st.write(plot_result(damage_fnp,False,col5,"Feel no Pain",custom_text="Damage after FnP"))
+
+    if show_distr:
+        col_distr_1, col_distr_2 = st.columns([1,3])
+
+# TO- DO:
+# The dataframe currently has too many columns with 0s when displaying Lethal Hits AND Dev Wounds at the same time
+
+        with col_distr_1:
+            data = []
+            idx_tuple = []
+
+            idx_tuple += [
+                    ("Hit", "P(X=x)"),
+                    ("Hit", "P(X<=x)")
+            ]
+            if lethal_hits:        
+                hits = hit_roll_hits.sum(axis=1)
+                crits = hit_roll_hits.sum(axis=0)
+                data += [
+                    hits,
+                    list(pd.Series(hits).cumsum()),
+                    crits,
+                    list(pd.Series(crits).cumsum()),
+                ]
+                idx_tuple += [
+                    ("Hit - Crit", "P(X=x)"),
+                    ("Hit - Crit", "P(X<=x)")
+                ]
+            else:
+                data += [
+                    hit_roll_hits,
+                    list(pd.Series(hit_roll_hits).cumsum()),
+                ]
+
+            idx_tuple +=[
+                    ("Wound", "P(X=x)"),
+                    ("Wound", "P(X<=x)")
+            ]
+            if dev_wounds:
+                hits = wound_roll_hits.sum(axis=1)
+                crits = wound_roll_hits.sum(axis=0)
+                data += [
+                    hits,
+                    list(pd.Series(hits).cumsum()),
+                    crits,
+                    list(pd.Series(crits).cumsum()),
+                ]
+                idx_tuple += [
+                    ("Wound - Crit", "P(X=x)"),
+                    ("Wound - Crit", "P(X<=x)")
+                ]
+            else:
+                data +=[
+                    wound_roll_hits,
+                    list(pd.Series(wound_roll_hits).cumsum()),
+                ]
+                
+            data +=[
+                save_roll_hits,
+                list(pd.Series(save_roll_hits).cumsum())
+                ]
+            idx_tuple += [
+                ('Save', 'P(X=x)'),
+                ('Save', 'P(X<=x)')
+            ]
+
+            index = pd.MultiIndex.from_tuples(idx_tuple)
+            st.dataframe(pd.DataFrame(data, index=index))
+
+        with col_distr_2:
+            data = [
+                damage_roll,
+                list(pd.Series(damage_roll).cumsum())
+            ]
+            index = pd.MultiIndex.from_tuples([
+                ('Damage', 'P(X=x)'),
+                ('Damage', 'P(X<=x)'),
+            ])
+            st.dataframe(pd.DataFrame(data, index=index))
