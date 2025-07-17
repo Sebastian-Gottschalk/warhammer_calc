@@ -5,7 +5,7 @@ from scipy.stats import  multinomial, binom
 import pandas as pd
 
 
-
+@st.cache_data
 def complete_roll(
         start_distr,
         dice_threshhold_1,dice_threshhold_2,dice_threshhold_3,
