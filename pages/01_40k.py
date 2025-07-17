@@ -341,7 +341,8 @@ with col3:
 ### DAMAGE ROLL
 
 with col4:
-    damage_roll = np.zeros(len(save_roll_hits)*len(damage_distr))
+    st.write(len(damage_distr), len(save_roll_hits))
+    damage_roll = np.zeros((len(save_roll_hits)-1)*(len(damage_distr)-1)+1)
     damage_distr_cur = np.array([1])
     for i, prob in enumerate(save_roll_hits):
         damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
