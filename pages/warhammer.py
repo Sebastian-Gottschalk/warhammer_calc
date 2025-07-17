@@ -73,7 +73,11 @@ with co1:
 with co2:
     dice_threshhold_2 = st.number_input("Wounding on",2,6, value=4)
 with co3:
-    dice_threshhold_3 = st.number_input("Saving on",2,6, value=4)
+    dice_threshhold_3 = st.number_input("Saving on",2,7, value=4)
+    if dice_threshhold_3==7:
+        no_save_roll = True
+    else:
+        no_save_roll=False
 
 with st.sidebar:
     side_bg = "img/kroot.png"
@@ -302,7 +306,10 @@ with col2:
 
 with col3:
 
-    if dev_wounds:
+    if no_save_roll:
+        save_roll = wound_roll
+        save_roll_hits = wound_roll_hits
+    elif dev_wounds:
         save_roll_hits = [0]*(wound_roll_hits.shape[0]+wound_roll_hits.shape[1]-1)
         for i in range(wound_roll_hits.shape[1]):
             save_roll = roll(wound_roll_hits[:,i], dice_threshhold_3)
