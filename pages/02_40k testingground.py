@@ -18,7 +18,7 @@ from tools.complete_roll import *
 # st.set_page_config(initial_sidebar_state = "collapsed")
 st.set_page_config(
     layout="wide", 
-    page_title = "40K test",
+    page_title = "40K Test",
     page_icon = ":space_invader:"
 )
 
@@ -132,9 +132,9 @@ with st.sidebar:
     if fight_troop:
         co1, co2 = st.columns(2)
         with co1:
-            amount_of_troops = st.number_input("Amount of units",1,100,value=10)
+            amount_of_troops = st.number_input("Units",1,100,value=10)
         with co2:
-            wounds_per_troop = st.number_input("Wounds per unit",1,20,value=3)
+            wounds_per_troop = st.number_input("Wounds",1,20,value=3)
         troops = np.zeros((wounds_per_troop+1,amount_of_troops))
         troops[wounds_per_troop,0] = 1
     else:
