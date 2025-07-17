@@ -312,7 +312,7 @@ with col3:
     elif dev_wounds:
         save_roll_hits = [0]*(wound_roll_hits.shape[0]+wound_roll_hits.shape[1]-1)
         for i in range(wound_roll_hits.shape[1]):
-            save_roll = roll(wound_roll_hits[:,i], dice_threshhold_3)
+            save_roll = roll(wound_roll_hits[:,i], 8-dice_threshhold_3)
             save_roll_hits[i:i+wound_roll_hits.shape[0]] += np.array(get_amount_of_hits(save_roll))
         save_roll_hits=save_roll_hits[0:wound_roll_hits.shape[0]]
     else:
