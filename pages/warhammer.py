@@ -195,7 +195,7 @@ with col1:
         expected_1 = 0
         for i in range(len(hit_roll_hits)):
             expected_1 += i*hit_roll_hits[i]
-        f"Expected number of hits: {np.round(expected_1,3)}"
+        f"Expected nr of hits: {np.round(expected_1,3)}"
     else:
         hits = hit_roll_hits.sum(axis=1)
         crits = hit_roll_hits.sum(axis=0)
@@ -223,7 +223,7 @@ with col1:
         for i in range(len(hits)):
             expected_1 += i*hits[i]
             expected_1_2 += i*crits[i]
-        f"Expected number of hits / crits: {np.round(expected_1,3)} / {np.round(expected_1_2,3)}"
+        f"Expected nr of hits / crits: {np.round(expected_1,3)} / {np.round(expected_1_2,3)}"
 
 
 ### WOUND ROLL
@@ -266,7 +266,7 @@ with col2:
         expected_2 = 0
         for i in range(len(wound_roll_hits)):
             expected_2 += i*wound_roll_hits[i]
-        f"Expected number of hits: {np.round(expected_2,3)}"
+        f"Expected nr of wounds: {np.round(expected_2,3)}"
     else:
         hits = wound_roll_hits.sum(axis=1)
         crits = wound_roll_hits.sum(axis=0)
@@ -294,7 +294,7 @@ with col2:
         for i in range(len(hits)):
             expected_1 += i*hits[i]
             expected_1_2 += i*crits[i]
-        f"Expected number of hits / crits: {np.round(expected_1,3)} / {np.round(expected_1_2,3)}"
+        f"Expected nr of wounds / crits: {np.round(expected_1,3)} / {np.round(expected_1_2,3)}"
 
 
 ### SAVE ROLL
@@ -327,7 +327,7 @@ with col3:
     expected_3 = 0
     for i in range(len(save_roll_hits)):
         expected_3 += i*save_roll_hits[i]
-    f"Expected number of wounds: {np.round(expected_3,3)}"
+    f"Expected nr of failed saves: {np.round(expected_3,3)}"
 
 ### DAMAGE ROLL
 
@@ -353,9 +353,7 @@ with col4:
     expected_4 = 0
     for i in range(len(damage_roll)):
         expected_4 += i*damage_roll[i]
-    st.latex(r"""\mathbb{E}(\text{Damge} = )
-             """)
-    f"Expected number of wounds: {np.round(expected_4,3)}"
+    f"Expected nr of damage: {np.round(expected_4,3)}"
 
 if feel_no_pain:
     with col5:
@@ -381,7 +379,7 @@ if feel_no_pain:
         expected_5 = 0
         for i in range(len(damage_fnp)):
             expected_5 += i*damage_fnp[i]
-        f"Expected number of wounds: {np.round(expected_5,3)}"
+        f"Expected nr of damage after FnP: {np.round(expected_5,3)}"
 
 if show_distr:
     col_distr_1, col_distr_2 = st.columns([1,3])
