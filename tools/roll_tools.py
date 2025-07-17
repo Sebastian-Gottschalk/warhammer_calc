@@ -170,10 +170,10 @@ def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain):
     resulting_distr = save_roll_hits[0]*troop
     for save in range(1,len(save_roll_hits)):
         new_distr = np.zeros(troop.shape)
-        for i in range(1,troop.shape[0]):
+        for i in range(troop.shape[0]):
             for k in range(troop.shape[1]):
                 if troop[i,k]>0:
-                    for dmg in range(1,len(damage_distr)):
+                    for dmg in range(len(damage_distr)):
                         if i-dmg>0:
                             new_distr[i-dmg,k] += damage_distr[dmg]*troop[i,k]
                         elif k == troop.shape[1]-1:
