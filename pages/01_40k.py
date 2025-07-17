@@ -181,12 +181,15 @@ if show_kroot:
         unsafe_allow_html=True
     )
 
-
+####
+# MISSING FEATURES / INPUTS IN MAIN RIGHT NOW:
+# troops
+####
 
 complete_roll(
     start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
     hit_roll_crit,wound_roll_crit,damage_distr,
     reroll_ones_hit,reroll_all_hit,reroll_ones_wound,reroll_all_wound,
     sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain,
-    plot_results, show_distr
+    plot_results, show_distr, troops = 0
 )

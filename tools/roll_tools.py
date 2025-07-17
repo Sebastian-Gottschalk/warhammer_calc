@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-from scipy.stats import  multinomial
+from scipy.stats import  multinomial, binom
 
 @st.cache_data
 def single_roll(n, thresh, reroll_ones = False,critting_on = 6, reroll_all = False):
@@ -141,5 +141,45 @@ def get_wound_threshhold(strength, toughness,modifier = 0, fixed_value = 0):
     return_value += modifier
     return_value = np.min(return_value, 6)
     return_value = np.max(return_value, 2)
-    
+
     return return_value
+
+
+# save_roll_hits:
+#   distribution of how many saves failed - independent of MW or not, in case of MW call this function twice
+# damage_distr:
+#   distribution of how much dmg each failed save will inflict
+# troop:
+#   numpy-array in the shape (wound_per_unit+1, amount_units)
+# eg
+#  [0 0
+#   1 0]
+#   generally troop[i,k] is equal to the probability that amount_units-k units are still alive and one of them still has i HP
+#   note that p[0,k] should always be 0 except for p[0,amount_units] in which case this value represents the chance of the whole squad dying
+def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain):
+    if feel_no_pain:
+        # adjust damage_distr to include FnP
+        damage_fnp = [0]*len(damage_distr)
+        prob_fnp = (feel_no_pain-1)/6 # probability that the feel no pain roll misses
+        for n in range(len(damage_distr)):
+            for k in range(n+1):
+                prob = binom.pmf(k,n,prob_fnp)
+                damage_fnp[k]+=prob*damage_distr[n]
+        damage_distr = damage_fnp
+
+    resulting_distr = save_roll_hits[0]*troop
+    for save in range(1,len(save_roll_hits)):
+        new_distr = np.zeros(troop.shape)
+        for i in range(1,troop.shape[0]):
+            for k in range(troop.shape[1]):
+                if troop[i,k]>0:
+                    for dmg in range(1,len(damage_distr)):
+                        if i-dmg>0:
+                            new_distr[i-dmg,k] += damage_distr[dmg]*troop[i,k]
+                        elif k == troop.shape[1]-1:
+                            new_distr[0,k] += damage_distr[dmg]*troop[i,k]
+                        else:
+                            new_distr[troop.shape[0]-1,k+1] += damage_distr[dmg] * troop[i,k]
+        troop = new_distr
+        resulting_distr += save_roll_hits[save]*troop
+    return resulting_distr

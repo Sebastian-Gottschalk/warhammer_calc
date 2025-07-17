@@ -12,7 +12,7 @@ def complete_roll(
         hit_roll_crit,wound_roll_crit, damage_distr,
         reroll_ones_hit, reroll_all_hit, reroll_ones_wound, reroll_all_wound,
         sustained_hits_nr, lethal_hits,dev_wounds, torrent,
-        feel_no_pain, plot_results, show_distr
+        feel_no_pain, plot_results, show_distr, troops
         ):
 
     no_save_roll = dice_threshhold_3==7
@@ -112,8 +112,14 @@ def complete_roll(
             if plot_results:
                 st.write(plot_result(damage_fnp,False,col5,"Feel no Pain",custom_text="Damage after FnP"))
 
+    if np.sum(troops):
+        shooting_result = shoot_on_troop(save_roll_hits, damage_distr, troops, feel_no_pain)
+        st.write(f"Chance for annihilation: {np.round(100*shooting_result[0,-1],2)}%")
+        st.write(shooting_result)
+
     if show_distr:
         col_distr_1, col_distr_2 = st.columns([1,3])
+
 
 # TO- DO:
 # The dataframe currently has too many columns with 0s when displaying Lethal Hits AND Dev Wounds at the same time
