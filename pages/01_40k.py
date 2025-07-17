@@ -453,7 +453,7 @@ if show_distr:
         ]
 
         index = pd.MultiIndex.from_tuples(idx_tuple)
-            st.dataframe(pd.DataFrame(data, index=index))
+        st.dataframe(pd.DataFrame(data, index=index))
 
     with col_distr_2:
         data = [
