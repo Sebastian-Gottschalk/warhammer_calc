@@ -124,8 +124,14 @@ with st.sidebar:
         wound_roll_crit=6
     if st.checkbox("Feel No Pain"):
         feel_no_pain = st.number_input("",2,6,value=6,label_visibility="collapsed")
+        if st.checkbox("Weird stuff"):
+            feel_no_pain_2 = st.number_input("",2,6,value=6,label_visibility="collapsed")
+        else:
+            feel_no_pain_2 = feel_no_pain
+            
     else:
         feel_no_pain = 0
+        feel_no_pain_2 = 0
 
     fight_troop = st.checkbox("Shoot on dudes")
 
@@ -205,6 +211,6 @@ complete_roll(
     start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
     hit_roll_crit,wound_roll_crit,damage_distr,
     reroll_ones_hit,reroll_all_hit,reroll_ones_wound,reroll_all_wound,
-    sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain,
+    sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain, feel_no_pain_2,
     plot_results, show_distr, troops
 )

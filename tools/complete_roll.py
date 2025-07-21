@@ -5,6 +5,7 @@ from scipy.stats import  multinomial, binom
 import pandas as pd
 
 
+
 @st.cache_data
 def complete_roll(
         start_distr,
@@ -12,7 +13,7 @@ def complete_roll(
         hit_roll_crit,wound_roll_crit, damage_distr,
         reroll_ones_hit, reroll_all_hit, reroll_ones_wound, reroll_all_wound,
         sustained_hits_nr, lethal_hits,dev_wounds, torrent,
-        feel_no_pain, plot_results, show_distr, troops
+        feel_no_pain,feel_no_pain_2, plot_results, show_distr, troops
         ):
 
     no_save_roll = dice_threshhold_3==7
@@ -22,15 +23,12 @@ def complete_roll(
     else:
         col1, col2,col3,col4= st.columns(4)
 
+
     ### HIT ROLL
 
     with col1:
-        if not torrent: 
-            hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones=reroll_ones_hit, critting_on=hit_roll_crit, reroll_all=reroll_all_hit)
-            hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, crit_auto_hit=lethal_hits)
-        else:
-            hit_roll_hits = start_distr
-        
+        hit_roll_hits = hit_roll(start_distr,dice_threshhold_1,reroll_ones_hit,hit_roll_crit,reroll_all_hit,sustained_hits_nr,lethal_hits,torrent)
+
         if plot_results:
             st.write(plot_result(hit_roll_hits, lethal_hits,col1,"Hit"))
 
@@ -40,25 +38,7 @@ def complete_roll(
     ### WOUND ROLL
 
     with col2:
-        if lethal_hits and not torrent:
-            if not dev_wounds:
-                wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1)
-                for i in range(hit_roll_hits.shape[1]):
-                    wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on=wound_roll_crit, reroll_all=reroll_all_wound)
-                    wound_roll_hits[i:i+hit_roll_hits.shape[0]] += np.array(get_amount_of_hits(wound_roll))
-                if not sustained_hits_nr:
-                    wound_roll_hits=wound_roll_hits[0:hit_roll_hits.shape[0]]
-            else: # Devestating wounds + Lethal Hits
-                wound_roll_hits = np.zeros((hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1,hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1))
-                for i in range(hit_roll_hits.shape[1]):
-                    new_roll = single_roll(i, dice_threshhold_2, reroll_ones=reroll_all_wound, critting_on=wound_roll_crit,reroll_all=reroll_all_wound)
-                    for k in range(hit_roll_hits.shape[1]):
-                        wound_roll_hits[k:k+i+1,0:i+1]+=hit_roll_hits[i,k] * new_roll
-            
-                
-        else:
-            wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on= wound_roll_crit, reroll_all=reroll_all_wound)
-            wound_roll_hits = get_amount_of_hits(wound_roll, crit_auto_hit=dev_wounds)
+        wound_roll_hits = wound_roll(hit_roll_hits,dice_threshhold_2,reroll_ones_wound,wound_roll_crit,reroll_all_wound,sustained_hits_nr,lethal_hits,torrent,dev_wounds)
 
         if plot_results:
             st.write(plot_result(wound_roll_hits, dev_wounds, col2, "Wound"))
@@ -69,21 +49,10 @@ def complete_roll(
 
     with col3:
 
-        if no_save_roll:
-            save_roll = wound_roll
-            save_roll_hits = wound_roll_hits
-        elif dev_wounds:
-            save_roll_hits = [0]*(wound_roll_hits.shape[0]+wound_roll_hits.shape[1]-1)
-            for i in range(wound_roll_hits.shape[1]):
-                save_roll = roll(wound_roll_hits[:,i], 8-dice_threshhold_3)
-                save_roll_hits[i:i+wound_roll_hits.shape[0]] += np.array(get_amount_of_hits(save_roll))
-            save_roll_hits=save_roll_hits[0:wound_roll_hits.shape[0]]
-        else:
-            save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
-            save_roll_hits = get_amount_of_hits(save_roll)
+        save_roll_hits = save_roll(wound_roll_hits,dice_threshhold_3,dev_wounds,no_save_roll)
 
         if plot_results:
-            st.write(plot_result(save_roll_hits,False,col3,"Save",custom_text="failed Saves"))
+            st.write(plot_result(save_roll_hits,dev_wounds,col3,"Save",custom_text="failed Saves"))
 
 
     ### DAMAGE ROLL
@@ -92,9 +61,7 @@ def complete_roll(
 
     with col4:
         if np.sum(troops):
-            shooting_result = shoot_on_troop(save_roll_hits, damage_distr, troops, feel_no_pain)
-            if np.sum(shooting_result)<1:
-                shooting_result[0,-1]+=1-np.sum(shooting_result)
+            shooting_result = shoot_roll(save_roll_hits, damage_distr,troops,feel_no_pain,dev_wounds,feel_no_pain_2)
             if plot_results:
                 st.write(plot_result(
                     shooting_result[1:,:].sum(axis=0).tolist() + [shooting_result[0,-1]],
@@ -102,11 +69,7 @@ def complete_roll(
                 ))
             st.write(f"Chance for annihilation: {np.round(100*shooting_result[0,-1],2)}%")
         else:
-            damage_roll = np.zeros((len(save_roll_hits)-1)*(len(damage_distr)-1)+1)
-            damage_distr_cur = np.array([1])
-            for i, prob in enumerate(save_roll_hits):
-                damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
-                damage_distr_cur = np.convolve(damage_distr_cur,damage_distr)
+            damage_roll = damaging_roll(save_roll_hits,damage_distr)
 
             if plot_results:
                 st.write(plot_result(damage_roll,False,col4,"Damage",custom_text="Damage"))
@@ -116,16 +79,10 @@ def complete_roll(
 
     if feel_no_pain and not np.sum(troops):
         with col5:
-            if feel_no_pain:
-                damage_fnp = [0]*len(damage_roll)
-                prob_fnp = (feel_no_pain-1)/6 # probability that the feel no pain roll misses
-                for n in range(len(damage_roll)):
-                    for k in range(n+1):
-                        prob = binom.pmf(k,n,prob_fnp)
-                        damage_fnp[k]+=prob*damage_roll[n]
-                
-                if plot_results:
-                    st.write(plot_result(damage_fnp,False,col5,"Feel no Pain",custom_text="Damage after FnP"))
+            damage_fnp = fnp_roll(damage_roll,feel_no_pain)
+            
+            if plot_results:
+                st.write(plot_result(damage_fnp,False,col5,"Feel no Pain",custom_text="Damage after FnP"))
 
 
     if show_distr:
@@ -218,3 +175,105 @@ def complete_roll(
                     ('Damage', 'P(X<=x)'),
                 ])
             st.dataframe(pd.DataFrame(data, index=index))
+
+
+
+
+
+
+
+@st.cache_data
+def hit_roll(start_distr,dice_threshhold_1,reroll_ones_hit,hit_roll_crit,reroll_all_hit,sustained_hits_nr,lethal_hits,torrent):
+    ### HIT ROLL
+
+
+    if not torrent: 
+        hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones=reroll_ones_hit, critting_on=hit_roll_crit, reroll_all=reroll_all_hit)
+        hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, crit_auto_hit=lethal_hits)
+    else:
+        hit_roll_hits = start_distr
+        
+    return hit_roll_hits
+
+
+@st.cache_data
+def wound_roll(hit_roll_hits,dice_threshhold_2,reroll_ones_wound,wound_roll_crit,reroll_all_wound,sustained_hits_nr,lethal_hits,torrent,dev_wounds):
+    if lethal_hits and not torrent:
+            if not dev_wounds:
+                wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1)
+                for i in range(hit_roll_hits.shape[1]):
+                    wound_roll = roll(hit_roll_hits[:,i], dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on=wound_roll_crit, reroll_all=reroll_all_wound)
+                    wound_roll_hits[i:i+hit_roll_hits.shape[0]] += np.array(get_amount_of_hits(wound_roll))
+                if not sustained_hits_nr:
+                    wound_roll_hits=wound_roll_hits[0:hit_roll_hits.shape[0]]
+            else: # Devestating wounds + Lethal Hits
+                wound_roll_hits = np.zeros((hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1,hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1))
+                for i in range(hit_roll_hits.shape[1]):
+                    new_roll = single_roll(i, dice_threshhold_2, reroll_ones=reroll_all_wound, critting_on=wound_roll_crit,reroll_all=reroll_all_wound)
+                    for k in range(hit_roll_hits.shape[1]):
+                        wound_roll_hits[k:k+i+1,0:i+1]+=hit_roll_hits[i,k] * new_roll
+            
+                
+    else:
+        wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on= wound_roll_crit, reroll_all=reroll_all_wound)
+        wound_roll_hits = get_amount_of_hits(wound_roll, crit_auto_hit=dev_wounds)
+    
+    return wound_roll_hits
+
+
+@st.cache_data
+def save_roll(wound_roll_hits,dice_threshhold_3,dev_wounds,no_save_roll):
+    if no_save_roll:
+            # save_roll = wound_roll
+            save_roll_hits = wound_roll_hits
+    elif dev_wounds:
+        save_roll_hits = [0]*(wound_roll_hits.shape[0]+wound_roll_hits.shape[1]-1)
+        save_roll_hits = np.zeros(wound_roll_hits.shape)
+        for i in range(wound_roll_hits.shape[1]):
+            save_roll = roll([0]*i+[1],8-dice_threshhold_3)
+            save_roll = get_amount_of_hits(save_roll)
+            for k in range(wound_roll_hits.shape[0]):             
+                save_roll_hits[0:i+1,k]+=wound_roll_hits[i,k]*np.array(save_roll)
+        save_roll_hits=save_roll_hits[0:wound_roll_hits.shape[0]]
+    else:
+        save_roll = roll(wound_roll_hits, 8-dice_threshhold_3)
+        save_roll_hits = get_amount_of_hits(save_roll)
+    return save_roll_hits
+
+@st.cache_data
+def shoot_roll(save_roll_hits, damage_distr,troops,feel_no_pain, dev_wounds,feel_no_pain_2):
+    if not dev_wounds:
+        shooting_result = shoot_on_troop(save_roll_hits, damage_distr, troops, feel_no_pain,False)
+    else:
+        shooting_result = np.zeros(troops.shape)
+        for hits in range(save_roll_hits.shape[0]):
+            current_hits = [0]*hits + [1]
+            # resolving the non Mortal wounds first
+            first_result = shoot_on_troop(current_hits,damage_distr,troops,feel_no_pain, False)
+            # st.write(first_result)
+            # then resolving the mortal wounds
+            second_result = shoot_on_troop(save_roll_hits[hits,:],damage_distr,first_result,feel_no_pain_2,True)
+            shooting_result += second_result
+            # st.write(second_result)
+    if np.sum(shooting_result)<1:
+        shooting_result[0,-1]+=1-np.sum(shooting_result)
+    return shooting_result
+
+@st.cache_data
+def damaging_roll(save_roll_hits,damage_distr):
+    damage_roll = np.zeros((len(save_roll_hits)-1)*(len(damage_distr)-1)+1)
+    damage_distr_cur = np.array([1])
+    for i, prob in enumerate(save_roll_hits):
+        damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
+        damage_distr_cur = np.convolve(damage_distr_cur,damage_distr)
+    return damage_roll
+
+@st.cache_data
+def fnp_roll(damage_roll,feel_no_pain):
+    damage_fnp = [0]*len(damage_roll)
+    prob_fnp = (feel_no_pain-1)/6 # probability that the feel no pain roll misses
+    for n in range(len(damage_roll)):
+        for k in range(n+1):
+            prob = binom.pmf(k,n,prob_fnp)
+            damage_fnp[k]+=prob*damage_roll[n]
+    return damage_fnp

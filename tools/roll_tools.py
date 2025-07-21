@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 from scipy.stats import  multinomial, binom
+import pandas as pd
 
 @st.cache_data
 def single_roll(n, thresh, reroll_ones = False,critting_on = 6, reroll_all = False):
@@ -156,7 +157,8 @@ def get_wound_threshhold(strength, toughness,modifier = 0, fixed_value = 0):
 #   1 0]
 #   generally troop[i,k] is equal to the probability that amount_units-k units are still alive and one of them still has i HP
 #   note that p[0,k] should always be 0 except for p[0,amount_units] in which case this value represents the chance of the whole squad dying
-def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain):
+@st.cache_data
+def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain, mortal_wounds):
     if feel_no_pain:
         # adjust damage_distr to include FnP
         damage_fnp = [0]*len(damage_distr)
@@ -166,20 +168,32 @@ def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain):
                 prob = binom.pmf(k,n,prob_fnp)
                 damage_fnp[k]+=prob*damage_distr[n]
         damage_distr = damage_fnp
-
+    if mortal_wounds:
+        max_index = (troop.shape[0]-1)*troop.shape[1]
     resulting_distr = save_roll_hits[0]*troop
     for save in range(1,len(save_roll_hits)):
         new_distr = np.zeros(troop.shape)
+        # debug_data = []
         for i in range(troop.shape[0]):
             for k in range(troop.shape[1]):
                 if troop[i,k]>0:
                     for dmg in range(len(damage_distr)):
-                        if i-dmg>0:
-                            new_distr[i-dmg,k] += damage_distr[dmg]*troop[i,k]
-                        elif k == troop.shape[1]-1:
-                            new_distr[0,k] += damage_distr[dmg]*troop[i,k]
+                        if not mortal_wounds:
+                            if i-dmg>0:
+                                new_distr[i-dmg,k] += damage_distr[dmg]*troop[i,k]
+                            elif k == troop.shape[1]-1:
+                                new_distr[0,k] += damage_distr[dmg]*troop[i,k]
+                            else:
+                                new_distr[troop.shape[0]-1,k+1] += damage_distr[dmg] * troop[i,k]
                         else:
-                            new_distr[troop.shape[0]-1,k+1] += damage_distr[dmg] * troop[i,k]
+                            # overspilling damage
+                            old_index = (troop.shape[0]-1)*k+troop.shape[1]-i
+                            new_index = min(old_index + dmg, max_index)
+                            i_new = troop.shape[0]-1 - new_index % (troop.shape[0]-1) if new_index<max_index else 0
+                            k_new = new_index // (troop.shape[0]-1) if new_index<max_index else troop.shape[1]-1
+                            new_distr[i_new, k_new] += damage_distr[dmg]*troop[i,k]
+                            # debug_data.append([i,k,old_index,dmg,new_index,i_new,k_new])
         troop = new_distr
         resulting_distr += save_roll_hits[save]*troop
+        # st.dataframe(pd.DataFrame(debug_data, columns = ["i","k","old_index","dmg","new_index","i_new","k_new"]))
     return resulting_distr
