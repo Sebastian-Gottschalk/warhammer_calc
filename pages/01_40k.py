@@ -124,9 +124,9 @@ with st.sidebar:
         hit_roll_crit=6
         wound_roll_crit=6
     if st.checkbox("Feel No Pain"):
-        feel_no_pain = st.number_input("Normal FnP",2,6,value=6,label_visibility="collapsed")
+        feel_no_pain = st.number_input("Normal FnP",2,7,value=6,label_visibility="collapsed")
         if st.checkbox("Weird stuff"):
-            feel_no_pain_2 = st.number_input("DevWounds FnP",2,6,value=6,label_visibility="collapsed")
+            feel_no_pain_2 = st.number_input("DevWounds FnP",2,7,value=6,label_visibility="collapsed")
         else:
             feel_no_pain_2 = feel_no_pain
             
