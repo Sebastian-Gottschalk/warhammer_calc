@@ -159,6 +159,8 @@ def get_wound_threshhold(strength, toughness,modifier = 0, fixed_value = 0):
 #   note that p[0,k] should always be 0 except for p[0,amount_units] in which case this value represents the chance of the whole squad dying
 @st.cache_data
 def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain, mortal_wounds):
+    wounds = troop.shape[0]-1
+    nr_units = troop.shape[1]
     if feel_no_pain:
         # adjust damage_distr to include FnP
         damage_fnp = [0]*len(damage_distr)
@@ -169,11 +171,10 @@ def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain, mortal_wou
                 damage_fnp[k]+=prob*damage_distr[n]
         damage_distr = damage_fnp
     if mortal_wounds:
-        max_index = (troop.shape[0]-1)*troop.shape[1]
+        max_index = wounds * nr_units
     resulting_distr = save_roll_hits[0]*troop
     for save in range(1,len(save_roll_hits)):
         new_distr = np.zeros(troop.shape)
-        # debug_data = []
         for i in range(troop.shape[0]):
             for k in range(troop.shape[1]):
                 if troop[i,k]>0:
@@ -187,10 +188,12 @@ def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain, mortal_wou
                                 new_distr[troop.shape[0]-1,k+1] += damage_distr[dmg] * troop[i,k]
                         else:
                             # overspilling damage
-                            old_index = (troop.shape[0]-1)*k+troop.shape[1]-i
-                            new_index = min(old_index + dmg, max_index)
-                            i_new = troop.shape[0]-1 - new_index % (troop.shape[0]-1) if new_index<max_index else 0
-                            k_new = new_index // (troop.shape[0]-1) if new_index<max_index else troop.shape[1]-1
+                            current_index = k*wounds + (wounds-i)+dmg
+                            current_index = min(current_index, max_index)
+                            k_new = current_index // wounds if current_index < max_index else nr_units - 1
+                            i_new = wounds - (current_index - k_new * wounds )
+                            #i_new = troop.shape[0]-1 - new_index % (troop.shape[0]-1) if new_index<max_index else 0
+                            #k_new = new_index // (troop.shape[0]-1) if new_index<max_index else troop.shape[1]-1
                             new_distr[i_new, k_new] += damage_distr[dmg]*troop[i,k]
                             # debug_data.append([i,k,old_index,dmg,new_index,i_new,k_new])
         troop = new_distr
