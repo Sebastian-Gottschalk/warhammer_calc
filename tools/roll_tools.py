@@ -175,8 +175,8 @@ def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain, mortal_wou
     resulting_distr = save_roll_hits[0]*troop
     for save in range(1,len(save_roll_hits)):
         new_distr = np.zeros(troop.shape)
-        for i in range(troop.shape[0]):
-            for k in range(troop.shape[1]):
+        for i in range(wounds+1):
+            for k in range(nr_units):
                 if troop[i,k]>0:
                     for dmg in range(len(damage_distr)):
                         if not mortal_wounds:
@@ -185,18 +185,14 @@ def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain, mortal_wou
                             elif k == troop.shape[1]-1:
                                 new_distr[0,k] += damage_distr[dmg]*troop[i,k]
                             else:
-                                new_distr[troop.shape[0]-1,k+1] += damage_distr[dmg] * troop[i,k]
+                                new_distr[wounds,k+1] += damage_distr[dmg] * troop[i,k]
                         else:
                             # overspilling damage
                             current_index = k*wounds + (wounds-i)+dmg
                             current_index = min(current_index, max_index)
                             k_new = current_index // wounds if current_index < max_index else nr_units - 1
                             i_new = wounds - (current_index - k_new * wounds )
-                            #i_new = troop.shape[0]-1 - new_index % (troop.shape[0]-1) if new_index<max_index else 0
-                            #k_new = new_index // (troop.shape[0]-1) if new_index<max_index else troop.shape[1]-1
                             new_distr[i_new, k_new] += damage_distr[dmg]*troop[i,k]
-                            # debug_data.append([i,k,old_index,dmg,new_index,i_new,k_new])
         troop = new_distr
         resulting_distr += save_roll_hits[save]*troop
-        # st.dataframe(pd.DataFrame(debug_data, columns = ["i","k","old_index","dmg","new_index","i_new","k_new"]))
     return resulting_distr
