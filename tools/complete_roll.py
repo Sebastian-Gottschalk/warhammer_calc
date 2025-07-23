@@ -69,20 +69,20 @@ def complete_roll(
                 ))
             st.write(f"Chance for annihilation: {np.round(100*shooting_result[0,-1],2)}%")
         else:
-            damage_roll = damaging_roll(save_roll_hits,damage_distr)
+            damage_roll = damaging_roll(save_roll_hits,damage_distr,dev_wounds)
 
             if plot_results:
-                st.write(plot_result(damage_roll,False,col4,"Damage",custom_text="Damage"))
+                st.write(plot_result(damage_roll,dev_wounds,col4,"Damage",custom_text="Damage"))
 
     ### FEEL NO PAIN
 
 
     if feel_no_pain and not np.sum(troops):
         with col5:
-            damage_fnp = fnp_roll(damage_roll,feel_no_pain)
+            damage_fnp = fnp_roll(damage_roll,feel_no_pain, dev_wounds, feel_no_pain_2)
             
             if plot_results:
-                st.write(plot_result(damage_fnp,False,col5,"Feel no Pain",custom_text="Damage after FnP"))
+                st.write(plot_result(damage_fnp,dev_wounds,col5,"Feel no Pain",custom_text="Damage after FnP"))
 
 
     if show_distr:
@@ -260,20 +260,52 @@ def shoot_roll(save_roll_hits, damage_distr,troops,feel_no_pain, dev_wounds,feel
     return shooting_result
 
 @st.cache_data
-def damaging_roll(save_roll_hits,damage_distr):
-    damage_roll = np.zeros((len(save_roll_hits)-1)*(len(damage_distr)-1)+1)
-    damage_distr_cur = np.array([1])
-    for i, prob in enumerate(save_roll_hits):
-        damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
-        damage_distr_cur = np.convolve(damage_distr_cur,damage_distr)
+def damaging_roll(save_roll_hits,damage_distr,dev_wounds):
+    if dev_wounds:
+        damage_roll = np.zeros(((save_roll_hits.shape[0]-1)*(len(damage_distr)-1)+1,(save_roll_hits.shape[1]-1)*(len(damage_distr)-1)+1))
+        # damage_roll[i,k] = prob of i normal wounds and k mortal wounds
+        all_damage_distr = [[1]]
+        for i in range(save_roll_hits.shape[0]):
+            all_damage_distr.append(list(np.convolve(all_damage_distr[-1],damage_distr)))
+        for i in range(save_roll_hits.shape[0]):
+            for k in range(save_roll_hits.shape[1]):
+                for i_new in range(len(all_damage_distr[i])):
+                    for k_new in range(len(all_damage_distr[k])):
+                        damage_roll[i_new, k_new] += save_roll_hits[i,k]*all_damage_distr[i][i_new]*all_damage_distr[k][k_new]
+
+    else:
+        damage_roll = np.zeros((len(save_roll_hits)-1)*(len(damage_distr)-1)+1)
+        damage_distr_cur = np.array([1])
+        for i, prob in enumerate(save_roll_hits):
+            damage_roll+=np.pad(prob*damage_distr_cur,(0,len(damage_roll)-len(damage_distr_cur)))
+            damage_distr_cur = np.convolve(damage_distr_cur,damage_distr)
     return damage_roll
 
 @st.cache_data
-def fnp_roll(damage_roll,feel_no_pain):
-    damage_fnp = [0]*len(damage_roll)
+def fnp_roll(damage_roll,feel_no_pain, dev_wounds, feel_no_pain_2):
     prob_fnp = (feel_no_pain-1)/6 # probability that the feel no pain roll misses
-    for n in range(len(damage_roll)):
-        for k in range(n+1):
-            prob = binom.pmf(k,n,prob_fnp)
-            damage_fnp[k]+=prob*damage_roll[n]
+    prob_fnp_2 = (feel_no_pain_2-1)/6
+    if dev_wounds:
+        damage_fnp_after_non_mortal = np.zeros(damage_roll.shape)
+        damage_fnp = np.zeros(damage_roll.shape)
+        # first apply FnP for the non mortal hits (rows in damage_roll)
+        for n in range(damage_roll.shape[0]): # nr of hits
+            for k in range(n+1):
+                prob = binom.pmf(k,n,prob_fnp)
+                for l in range(damage_roll.shape[1]):
+                    damage_fnp_after_non_mortal[k,l] += prob * damage_roll[n,l]
+        st.write(np.sum(damage_fnp_after_non_mortal))
+        for n in range(damage_roll.shape[1]): # nr of hits
+            for k in range(n+1):
+                prob = binom.pmf(k,n,prob_fnp)
+                for l in range(damage_roll.shape[0]):
+                    damage_fnp[l,k] += prob * damage_fnp_after_non_mortal[l,n]
+        st.write(np.sum(damage_fnp))
+    else:
+        damage_fnp = [0]*len(damage_roll)
+        for n in range(len(damage_roll)):
+            if damage_roll[n]:
+                for k in range(n+1):
+                    prob = binom.pmf(k,n,prob_fnp)
+                    damage_fnp[k]+=prob*damage_roll[n]
     return damage_fnp
