@@ -67,7 +67,7 @@ def complete_roll(
                     shooting_result[1:,:].sum(axis=0).tolist() + [shooting_result[0,-1]],
                     False,col4,"dead Unit"
                 ))
-            st.write(f"Chance for annihilation: {np.round(100*shooting_result[0,-1],2)}%")
+                st.write(f"Chance for annihilation: {np.round(100*shooting_result[0,-1],2)}%")
         else:
             damage_roll = damaging_roll(save_roll_hits,damage_distr,dev_wounds)
 
@@ -207,7 +207,12 @@ def complete_roll(
                     ])
             st.dataframe(pd.DataFrame(data, index=index))
 
-
+    if np.sum(troops):
+        return shooting_result
+    elif feel_no_pain:
+        return damage_fnp
+    else:
+        return damage_roll
 
 
 
