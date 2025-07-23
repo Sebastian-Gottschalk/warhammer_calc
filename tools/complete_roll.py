@@ -86,7 +86,7 @@ def complete_roll(
 
 
     if show_distr:
-        col_distr_1, col_distr_2 = st.columns([1,3])
+        col_distr_1, col_distr_2 = st.columns(2)
 
 
 # TO- DO:
@@ -136,20 +136,35 @@ def complete_roll(
                     ("Wound - Crit", "P(X=x)"),
                     ("Wound - Crit", "P(X<=x)")
                 ]
+
+                hits = save_roll_hits.sum(axis=1)
+                crits = save_roll_hits.sum(axis=0)
+                data += [
+                    hits,
+                    list(pd.Series(hits).cumsum()),
+                    crits,
+                    list(pd.Series(crits).cumsum()),
+                ]
+                idx_tuple += [
+                    ('Save', 'P(X=x)'),
+                    ('Save', 'P(X<=x)'),
+                    ("Save - Crit", "P(X=x)"),
+                    ("Save - Crit", "P(X<=x)")
+                ]
             else:
                 data +=[
                     wound_roll_hits,
                     list(pd.Series(wound_roll_hits).cumsum()),
                 ]
                 
-            data +=[
-                save_roll_hits,
-                list(pd.Series(save_roll_hits).cumsum())
+                data +=[
+                    save_roll_hits,
+                    list(pd.Series(save_roll_hits).cumsum())
+                    ]
+                idx_tuple += [
+                    ('Save', 'P(X=x)'),
+                    ('Save', 'P(X<=x)')
                 ]
-            idx_tuple += [
-                ('Save', 'P(X=x)'),
-                ('Save', 'P(X<=x)')
-            ]
 
             index = pd.MultiIndex.from_tuples(idx_tuple)
             st.dataframe(pd.DataFrame(data, index=index))
@@ -166,14 +181,30 @@ def complete_roll(
                     ('Units killed', 'P(X<=x)'),
                 ])
             else:
-                data = [
-                    damage_roll,
-                    list(pd.Series(damage_roll).cumsum())
-                ]
-                index = pd.MultiIndex.from_tuples([
-                    ('Damage', 'P(X=x)'),
-                    ('Damage', 'P(X<=x)'),
-                ])
+                if dev_wounds:
+                    hits = damage_roll.sum(axis=1)
+                    crits = damage_roll.sum(axis=0)
+                    data = [
+                        hits,
+                        list(pd.Series(hits).cumsum()),
+                        crits,
+                        list(pd.Series(crits).cumsum()),
+                    ]
+                    index = pd.MultiIndex.from_tuples([
+                        ('Damage', 'P(X=x)'),
+                        ('Damage', 'P(X<=x)'),
+                        ("Damage - Crit", "P(X=x)"),
+                        ("Damage - Crit", "P(X<=x)")
+                    ])
+                else:
+                    data = [
+                        damage_roll,
+                        list(pd.Series(damage_roll).cumsum())
+                    ]
+                    index = pd.MultiIndex.from_tuples([
+                        ('Damage', 'P(X=x)'),
+                        ('Damage', 'P(X<=x)'),
+                    ])
             st.dataframe(pd.DataFrame(data, index=index))
 
 
