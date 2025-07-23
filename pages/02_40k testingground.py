@@ -238,7 +238,7 @@ for i in range(len(all_settings)):
         reroll_ones_hit,reroll_all_hit,reroll_ones_wound,reroll_all_wound,
         sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain, feel_no_pain_2,
         current_plot_result, show_distr, troops
-    )
+        )
     else:
         complete_roll(
             start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
