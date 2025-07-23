@@ -325,13 +325,11 @@ def fnp_roll(damage_roll,feel_no_pain, dev_wounds, feel_no_pain_2):
                 prob = binom.pmf(k,n,prob_fnp)
                 for l in range(damage_roll.shape[1]):
                     damage_fnp_after_non_mortal[k,l] += prob * damage_roll[n,l]
-        st.write(np.sum(damage_fnp_after_non_mortal))
         for n in range(damage_roll.shape[1]): # nr of hits
             for k in range(n+1):
-                prob = binom.pmf(k,n,prob_fnp)
+                prob = binom.pmf(k,n,prob_fnp_2)
                 for l in range(damage_roll.shape[0]):
                     damage_fnp[l,k] += prob * damage_fnp_after_non_mortal[l,n]
-        st.write(np.sum(damage_fnp))
     else:
         damage_fnp = [0]*len(damage_roll)
         for n in range(len(damage_roll)):
