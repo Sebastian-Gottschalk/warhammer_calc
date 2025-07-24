@@ -103,7 +103,6 @@ for i in range(st.session_state.number_of_weapons):
                 no_save_roll = True
             else:
                 no_save_roll=False
-    with st.expander(f"{st.session_state.names_of_weapons[i]} Rules"):
         col1,col2,col3,col4,col5,col6,col7 = st.columns(7)
         reroll = col1.checkbox("Rerolls", key = f"rerolls_{i}")
         reroll_ones_hit = False
