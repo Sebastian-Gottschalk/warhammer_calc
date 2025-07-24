@@ -28,15 +28,23 @@ if "number_of_weapons" not in st.session_state:
 
 _,minus,middle,plus,_ = st.columns(5)
 
-minus.button(":heavy_minus_sign:", on_click=remove_weapon)
+minus.button(":heavy_minus_sign:", on_click=remove_weapon, disabled= st.session_state.number_of_weapons == 1)
 plus.button(":heavy_plus_sign:", on_click=add_weapon)
 middle.write(f"Current Nr of weapons: {st.session_state.number_of_weapons}")
 
 all_settings = []
 
+if "names_of_weapons" not in st.session_state:
+    st.session_state.names_of_weapons = ["Weapon Nr 1"]
+
 
 for i in range(st.session_state.number_of_weapons):
-    with st.expander(f"Weapon Nr {i+1}"):    
+    with st.expander(f"{i+1} - {st.session_state.names_of_weapons[i]}"):
+        name = st.text_input("Name",value = st.session_state.names_of_weapons[i], key = f"enter_name_{i}")
+        if name != st.session_state.names_of_weapons[i]:
+            st.session_state.names_of_weapons[i] = name
+            st.rerun()
+
         main_col_1, main_col_2 = st.columns(2)
 
         _,col_title_1,_ = main_col_1.columns([0.25,1,0.25])
@@ -95,7 +103,7 @@ for i in range(st.session_state.number_of_weapons):
                 no_save_roll = True
             else:
                 no_save_roll=False
-    with st.expander(f"Weapon Rules {i+1}"):
+    with st.expander(f"{st.session_state.names_of_weapons[i]} Rules"):
         col1,col2,col3,col4,col5,col6,col7 = st.columns(7)
         reroll = col1.checkbox("Rerolls", key = f"rerolls_{i}")
         reroll_ones_hit = False
@@ -231,6 +239,8 @@ if sustained_hits_nr>=2 and lethal_hits and dev_wounds:
 for i in range(len(all_settings)):
     start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,hit_roll_crit,wound_roll_crit,damage_distr,reroll_ones_hit,reroll_all_hit,reroll_ones_wound,reroll_all_wound,sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain, feel_no_pain_2 = all_settings[i]
     current_plot_result = (plot_results and i==len(all_settings)-1) or plot_all_results
+    if current_plot_result:
+        st.write(f"Result for {st.session_state.names_of_weapons[i]}")
     if np.sum(troops):
         troops = complete_roll(
         start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
