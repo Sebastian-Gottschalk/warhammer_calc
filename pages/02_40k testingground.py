@@ -60,7 +60,7 @@ for i in range(st.session_state.number_of_weapons):
             num_dice = st.number_input("Dice", min_value=0, value=0, key=f'num_dice_1_{i}')
 
         with coll2:
-            dice_size = int(st.radio("", ["W3", "W6"], key= f"dice_size_1_{i}", index=1)[1])
+            dice_size = int(st.radio("_", ["W3", "W6"], key= f"dice_size_1_{i}", index=1, label_visibility = "hidden")[1])
 
         with coll3:
             modifier = st.number_input("Modifier", value=3, key=f'modifier_1_{i}', min_value=0)
@@ -80,7 +80,7 @@ for i in range(st.session_state.number_of_weapons):
             num_dice = st.number_input("Dice", min_value=0, value=0, key=f'num_dice_2_{i}')
 
         with colllll2:
-            dice_size = int(st.radio("", ["W3", "W6"], key=f"dice_size_2_{i}",index=1)[1])
+            dice_size = int(st.radio("_2", ["W3", "W6"], key=f"dice_size_2_{i}",index=1, label_visibility = "hidden")[1])
 
         with colllll3:
             modifier = st.number_input("Modifier", value=3, key=f'modifier_2_{i}', min_value=0)
