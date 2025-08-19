@@ -248,11 +248,7 @@ for i in range(len(all_settings)):
         sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain, feel_no_pain_2,
         current_plot_result, show_distr, troops
         )
-    else:
-        # Test
-        troops = [0,0]*(len(damage_distr)*len(start_distr))
-        troops[0][0] = 1
-        
+    else:        
         complete_roll(
             start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
             hit_roll_crit,wound_roll_crit,damage_distr,
