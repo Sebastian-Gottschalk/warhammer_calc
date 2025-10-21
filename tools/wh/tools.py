@@ -29,6 +29,3 @@ def remove_weapon():
 
 def save_weapon(name, settings):
     st.session_state.wh_saved_weapons[name] = settings
-
-def load_weapon(i, name):
-    st.session_state.wh_default_weapong_values[i] = st.session_state.wh_saved_weapons[name]
