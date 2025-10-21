@@ -1,6 +1,6 @@
 import streamlit as st
-from tools.roll_tools import *
-from tools.plot_tools import *
+from tools.wh.roll_tools import *
+from tools.wh.plot_tools import *
 from scipy.stats import  multinomial, binom
 import pandas as pd
 
@@ -11,7 +11,8 @@ def complete_roll(
         start_distr,
         dice_threshhold_1,dice_threshhold_2,dice_threshhold_3,
         hit_roll_crit,wound_roll_crit, damage_distr,
-        reroll_ones_hit, reroll_all_hit, reroll_ones_wound, reroll_all_wound,
+        reroll_ones_hit, reroll_all_hit,reroll_fish_hit,
+        reroll_ones_wound, reroll_all_wound, reroll_fish_wound,
         sustained_hits_nr, lethal_hits,dev_wounds, torrent,
         feel_no_pain,feel_no_pain_2, plot_results, show_distr, troops
         ):
@@ -27,7 +28,7 @@ def complete_roll(
     ### HIT ROLL
 
     with col1:
-        hit_roll_hits = hit_roll(start_distr,dice_threshhold_1,reroll_ones_hit,hit_roll_crit,reroll_all_hit,sustained_hits_nr,lethal_hits,torrent)
+        hit_roll_hits = hit_roll(start_distr,dice_threshhold_1,reroll_ones_hit,reroll_all_hit,reroll_fish_hit,hit_roll_crit,sustained_hits_nr,lethal_hits,torrent)
 
         if plot_results:
             st.write(plot_result(hit_roll_hits, lethal_hits,col1,"Hit"))
@@ -38,7 +39,7 @@ def complete_roll(
     ### WOUND ROLL
 
     with col2:
-        wound_roll_hits = wound_roll(hit_roll_hits,dice_threshhold_2,reroll_ones_wound,wound_roll_crit,reroll_all_wound,sustained_hits_nr,lethal_hits,torrent,dev_wounds)
+        wound_roll_hits = wound_roll(hit_roll_hits,dice_threshhold_2,reroll_ones_wound,reroll_all_wound,reroll_fish_wound,wound_roll_crit,sustained_hits_nr,lethal_hits,torrent,dev_wounds)
 
         if plot_results:
             st.write(plot_result(wound_roll_hits, dev_wounds, col2, "Wound"))
@@ -219,12 +220,10 @@ def complete_roll(
 
 
 @st.cache_data
-def hit_roll(start_distr,dice_threshhold_1,reroll_ones_hit,hit_roll_crit,reroll_all_hit,sustained_hits_nr,lethal_hits,torrent):
+def hit_roll(start_distr,dice_threshhold_1,reroll_ones_hit,reroll_all_hit,reroll_fish_hit,hit_roll_crit,sustained_hits_nr,lethal_hits,torrent):
     ### HIT ROLL
-
-
     if not torrent: 
-        hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones=reroll_ones_hit, critting_on=hit_roll_crit, reroll_all=reroll_all_hit)
+        hit_roll = roll(start_distr, dice_threshhold_1, reroll_ones=reroll_ones_hit, critting_on=hit_roll_crit, reroll_all=reroll_all_hit,reroll_fish = reroll_fish_hit)
         hit_roll_hits = get_amount_of_hits(hit_roll, sustained_hits=sustained_hits_nr, crit_auto_hit=lethal_hits)
     else:
         hit_roll_hits = start_distr
@@ -233,7 +232,7 @@ def hit_roll(start_distr,dice_threshhold_1,reroll_ones_hit,hit_roll_crit,reroll_
 
 
 @st.cache_data
-def wound_roll(hit_roll_hits,dice_threshhold_2,reroll_ones_wound,wound_roll_crit,reroll_all_wound,sustained_hits_nr,lethal_hits,torrent,dev_wounds):
+def wound_roll(hit_roll_hits,dice_threshhold_2,reroll_ones_wound,reroll_all_wound,reroll_fish_wound,wound_roll_crit,sustained_hits_nr,lethal_hits,torrent,dev_wounds):
     if lethal_hits and not torrent:
             if not dev_wounds:
                 wound_roll_hits = [0]*(hit_roll_hits.shape[0]+hit_roll_hits.shape[1]-1)
@@ -251,7 +250,7 @@ def wound_roll(hit_roll_hits,dice_threshhold_2,reroll_ones_wound,wound_roll_crit
             
                 
     else:
-        wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on= wound_roll_crit, reroll_all=reroll_all_wound)
+        wound_roll = roll(hit_roll_hits, dice_threshhold_2, reroll_ones=reroll_ones_wound, critting_on= wound_roll_crit, reroll_all=reroll_all_wound, reroll_fish=reroll_fish_wound)
         wound_roll_hits = get_amount_of_hits(wound_roll, crit_auto_hit=dev_wounds)
     
     return wound_roll_hits
