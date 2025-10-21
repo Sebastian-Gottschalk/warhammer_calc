@@ -283,14 +283,13 @@ def shoot_roll(save_roll_hits, damage_distr,troops,feel_no_pain, dev_wounds,feel
     else:
         shooting_result = np.zeros(troops.shape)
         for hits in range(save_roll_hits.shape[0]):
-            current_hits = [0]*hits + [1]
             # resolving the non Mortal wounds first
+            current_hits = [0]*hits + [1]
             first_result = shoot_on_troop(current_hits,damage_distr,troops,feel_no_pain, False)
-            # st.write(first_result)
             # then resolving the mortal wounds
             second_result = shoot_on_troop(save_roll_hits[hits,:],damage_distr,first_result,feel_no_pain_2,True)
             shooting_result += second_result
-            # st.write(second_result)
+    # checking for rounding errors
     if np.sum(shooting_result)<1:
         shooting_result[0,-1]+=1-np.sum(shooting_result)
     return shooting_result

@@ -122,7 +122,6 @@ def get_dicesum(nr_dice, bias, dice_size):
     else: # in case nr_dice = 0
         return [0]*bias+[1]
 
-
 def get_wound_threshhold(strength, toughness,modifier = 0, fixed_value = 0):
     if fixed_value:
         return fixed_value
