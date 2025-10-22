@@ -1,8 +1,5 @@
 import streamlit as st
 
-from tools.wh.tools import Default_weapon
-
-
 def setup_40k():
     st.set_page_config(
         layout="wide", 

@@ -17,6 +17,8 @@ from tools.setup import setup_40k
 
 ### STREAMLIT INTERFACE
 
+
+# Setup
 if "setup_40k" not in st.session_state:
     setup_40k()
     st.session_state.setup_40k = True
@@ -301,7 +303,7 @@ for i in range(len(st.session_state.wh_current_settings)):
         sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain, feel_no_pain_2,
         current_plot_result, show_distr, st.session_state.wh_current_troops[i]
         )
-        if len(st.session_state.wh_current_troops) < len(st.session_state.wh_current_weapon):
+        if len(st.session_state.wh_current_troops) < len(st.session_state.wh_current_settings):
             st.session_state.wh_current_troops.append(new_troops)
     else:        
         complete_roll(
