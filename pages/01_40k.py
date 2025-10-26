@@ -284,7 +284,8 @@ if sustained_hits_nr>=2 and lethal_hits and dev_wounds:
 # Setting up the Calculate Button and updating session states if pressed
 _,middle,_ = st.columns([3,1,3])
 if middle.button("Calculate"):
-    st.session_state.wh_current_settings = all_settings
+    st.session_state.wh_current_settings_wo_calc = all_settings
+    st.session_state.wh_current_settings= st.session_state.wh_current_settings_wo_calc.copy()
     st.session_state.wh_troops = troops
     st.session_state.wh_current_troops = [troops]
     st.session_state.wh_enabled_weapons = all_enabled
