@@ -193,7 +193,7 @@ for i in range(st.session_state.wh_number_of_weapons):
         if sustained_hits:
             sustained_hits_nr = col2.number_input("Sustained Hits",1,10,label_visibility="collapsed", key=f"wh_sustained_hits_nr_{i}", value = max(default_values["sustained_hits_nr"],1))
         else:
-            sustained_hits_nr = 0a
+            sustained_hits_nr = 0
         lethal_hits = col3.checkbox("Lethal Hits", key=f"wh_lethal_hits_{i}", value = default_values["lethal_hits"])
         dev_wounds = col4.checkbox("Dev Wounds", key=f"wh_dev_wounds_{i}", value = default_values["dev_wounds"])
         if dev_wounds:
