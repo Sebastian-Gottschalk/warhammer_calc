@@ -31,7 +31,7 @@ def complete_roll(
 
     no_save_roll = dice_threshhold_3==7
 
-    if feel_no_pain and not np.sum(troops):
+    if feel_no_pain_setting and not np.sum(troops):
         col1, col2,col3,col4, col5= st.columns(5)
     else:
         col1, col2,col3,col4= st.columns(4)
@@ -89,7 +89,7 @@ def complete_roll(
     ### FEEL NO PAIN
 
 
-    if feel_no_pain and not np.sum(troops):
+    if feel_no_pain_setting and not np.sum(troops):
         with col5:
             damage_fnp = fnp_roll(damage_roll,feel_no_pain, dev_wounds, feel_no_pain_2)
             
@@ -221,7 +221,7 @@ def complete_roll(
 
     if np.sum(troops):
         return shooting_result
-    elif feel_no_pain:
+    elif feel_no_pain_setting:
         return damage_fnp
     else:
         return damage_roll
