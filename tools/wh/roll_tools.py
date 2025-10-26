@@ -2,9 +2,10 @@ import streamlit as st
 import numpy as np
 from scipy.stats import  multinomial, binom
 import pandas as pd
+from tools.wh.tools import Options
 
 @st.cache_data
-def single_roll(n, thresh, reroll_ones = False,critting_on = 6, reroll_all = False, reroll_fish = False):
+def single_roll(n, thresh, reroll: int,critting_on: int = 6):
     '''
     calculates the distribution of a single roll with n dice, with everything >= thresh being a sucess and every 6 being a crit
     the resulting matrix has the form
@@ -14,11 +15,16 @@ def single_roll(n, thresh, reroll_ones = False,critting_on = 6, reroll_all = Fal
     ]
     where p_ij is the probability of i hits and j crits
     (where of course p_ij = 0 if i+j>n)
+    reroll is an inte
     '''
+    reroll_ones = Options.REROLL_OPTIONS[reroll] == "Reroll 1s"
+    reroll_all = Options.REROLL_OPTIONS[reroll] == "Reroll all"
+    reroll_fish = Options.REROLL_OPTIONS[reroll] == "Fish for crits"
+    reroll_fish_2 = Options.REROLL_OPTIONS[reroll] == "Fish for hits"
     results = np.zeros((n+1,n+1))
     p_crit = (7-critting_on)/6
     p_hit = (critting_on-thresh)/6
-    if not any([reroll_ones,reroll_all,reroll_fish]):
+    if not reroll: # reroll == 0, so "No reroll"
         p = [p_hit,p_crit,1-p_hit-p_crit]
         for i in range(n+1):
             for j in range(n+1-i):
@@ -36,11 +42,15 @@ def single_roll(n, thresh, reroll_ones = False,critting_on = 6, reroll_all = Fal
             p = [p_one, p_hit, p_crit]
         elif reroll_fish:
             results_roll_1 = np.zeros((n+1,n+1))
-            p_one = 1-p_hit
+            p_one = 1-p_crit
             p = [p_one,0,p_crit]
+        elif reroll_fish_2:
+            results_roll_1 = np.zeros((n+1,n+1))
+            p_one = 1-p_hit
+            p = [p_one,p_hit,0]
         for i in range(n+1): #crits
             for j in range(n+1): #hits
-                if reroll_all or reroll_fish:
+                if reroll_all or reroll_fish or reroll_fish_2:
                     if i+j<=n:
                         results_roll_1[i,j] = multinomial.pmf([i,j,n-i-j], n=n, p=p)
                 elif reroll_ones:
@@ -52,9 +62,9 @@ def single_roll(n, thresh, reroll_ones = False,critting_on = 6, reroll_all = Fal
         
         # Use the first distribution to reroll ones
         for i in range(n+1): #ones
-            new_roll = single_roll(i,thresh,critting_on=critting_on)
+            new_roll = single_roll(i,thresh,critting_on=critting_on, reroll=0)
             for j in range(n+1): #hits
-                if reroll_all or reroll_fish:
+                if reroll_all or reroll_fish or reroll_fish_2:
                     if i+j<=n:
                         l=n-j-i
                         results[j:j+i+1, l:l+i+1] += results_roll_1[i,j]*new_roll
@@ -65,7 +75,7 @@ def single_roll(n, thresh, reroll_ones = False,critting_on = 6, reroll_all = Fal
     return results
 
 @st.cache_data
-def roll(distr, thresh, reroll_ones = False,critting_on=6,reroll_all = False,reroll_fish = False):
+def roll(distr, thresh, reroll,critting_on=6):
     '''
     distr is a list e.g. [0.25,0.5,0.25] meaning
     25% chance of n=0
@@ -78,7 +88,7 @@ def roll(distr, thresh, reroll_ones = False,critting_on=6,reroll_all = False,rer
     resulting_distr = np.zeros((max_n,max_n))
     for n, prob in enumerate(distr):
         if prob:
-            n_distr = single_roll(n,thresh, reroll_ones,critting_on=critting_on,reroll_all=reroll_all,reroll_fish=reroll_fish)
+            n_distr = single_roll(n,thresh, reroll,critting_on=critting_on)
             n_distr = np.pad(n_distr,(0,max_n-n-1), mode="constant", constant_values=0)
             resulting_distr += prob * n_distr
     return resulting_distr

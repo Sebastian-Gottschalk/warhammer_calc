@@ -1,6 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
+import base64
 
 
 
@@ -71,3 +72,42 @@ def get_threshhold_plot(dice_roll, threshhold = 0.999, multi_list = False):
             if dice_roll_index>max_index:
                 max_index = dice_roll_index
         return [dice_result[:max_index] for dice_result in dice_roll]
+    
+
+def show_kroot_1():
+    side_bg = "img/kroot.png"
+    side_bg_ext = "png"
+    with open(side_bg, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stSidebar"] > div:first-child {{
+            background: url(data:image/{side_bg_ext};base64,{encoded_string});
+            background-size : contain;
+            background-repeat: no-repeat;
+            background-position: center 75%;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+def show_kroot_2():
+    side_bg = "img/kroot_2.png"
+    side_bg_ext = "png"
+    with open(side_bg, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background: url(data:image/{side_bg_ext};base64,{encoded_string});
+            background-size : 70%;
+            background-repeat: no-repeat;
+            background-position: center;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )

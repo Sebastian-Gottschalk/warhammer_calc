@@ -30,6 +30,7 @@ middle.write(f"Current Nr of weapons: {st.session_state.wh_number_of_weapons}")
 
 
 all_settings = []
+all_enabled = []
 
 if "wh_names_of_weapons" not in st.session_state:
     st.session_state.wh_names_of_weapons = ["Weapon Nr 1"]
@@ -41,7 +42,9 @@ for i in range(st.session_state.wh_number_of_weapons):
     else:
         default_values = Default_weapon.default_wh_weapon
     
-    with st.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}"):
+    left, right = st.columns([1,30])
+    enabled = left.checkbox(" ", key=f"enabled_{i}", value = True)
+    with right.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}"):
         left,_, col_save = st.columns([7,1,1])
         name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key = f"enter_name_{i}")
         if name != st.session_state.wh_names_of_weapons[i]:
@@ -63,7 +66,7 @@ for i in range(st.session_state.wh_number_of_weapons):
             num_dice_att = st.number_input("Dice", min_value=0, value=default_values["num_dice_att"], key=f'num_dice_1_{i}')
 
         with coll2:
-            dice_size_att = int(st.radio("_", ["W3", "W6"], key= f"dice_size_1_{i}", label_visibility = "hidden", index = default_values["dice_size_att"])[1])
+            dice_size_att = int(st.radio("_", ["W"+str(number) for number in Options.DICE_SIZES_ATT], key= f"dice_size_1_{i}", label_visibility = "hidden", index = default_values["dice_size_att"])[1:])
 
         with coll3:
             modifier_att = st.number_input("Modifier", value=default_values["modifier_att"], key=f'modifier_1_{i}', min_value=0)
@@ -83,7 +86,7 @@ for i in range(st.session_state.wh_number_of_weapons):
             num_dice_dmg = st.number_input("Dice", min_value=0, value=default_values["num_dice_dmg"], key=f'num_dice_2_{i}')
 
         with colllll2:
-            dice_size_dmg = int(st.radio("_2", ["W3", "W6"], key=f"dice_size_2_{i}",index=default_values["dice_size_dmg"], label_visibility = "hidden")[1])
+            dice_size_dmg = int(st.radio("_2", ["W"+str(number) for number in Options.DICE_SIZES_WND], key=f"dice_size_2_{i}",index=default_values["dice_size_dmg"], label_visibility = "hidden")[1:])
 
         with colllll3:
             modifier_dmg = st.number_input("Modifier", value=default_values["modifier_dmg"], key=f'modifier_2_{i}', min_value=0)
@@ -108,37 +111,22 @@ for i in range(st.session_state.wh_number_of_weapons):
                 no_save_roll=False
         col1,col2,col3,col4,col5,col6,col7 = st.columns(7)
         reroll = col1.checkbox("Rerolls", key = f"rerolls_{i}", value = default_values["reroll"])
-        reroll_ones_hit = False
-        reroll_all_hit = False
-        reroll_fish_hit = False
-        reroll_ones_wound = False
-        reroll_all_wound = False
-        reroll_fish_wound = False
+        dev_wounds_overspill = False
         if reroll:
-            rerolls_hit = col1.selectbox("Hit Roll", ["No reroll" , "Reroll 1s", "Reroll all","Fish for crits"], key=f"hit_roll_{i}", index=default_values["reroll_hit"])
-            if rerolls_hit == "Reroll 1s":
-                reroll_ones_hit = True
-            elif rerolls_hit == "Reroll all":
-                reroll_all_hit = True
-            elif rerolls_hit == "Fish for crits":
-                reroll_fish_hit = True
-            rerolls_wound = col1.selectbox("Wound Roll", ["No reroll" , "Reroll 1s", "Reroll all","Fish for crits"], key=f"wound_roll_{i}", index = default_values["reroll_wound"])
-            if rerolls_wound == "Reroll 1s":
-                reroll_ones_wound = True
-            elif rerolls_wound == "Reroll all":
-                reroll_all_wound = True
-            elif rerolls_wound == "Fish for crits":
-                reroll_fish_wound = True
+            rerolls_hit = col1.selectbox("Hit Roll",Options.REROLL_OPTIONS , key=f"hit_roll_{i}", index=default_values["reroll_hit"])
+            rerolls_wound = col1.selectbox("Wound Roll", Options.REROLL_OPTIONS, key=f"wound_roll_{i}", index = default_values["reroll_wound"])
         else:
             rerolls_hit = "No reroll" # for saving a weapon
             rerolls_wound = "No reroll"
         sustained_hits = col2.checkbox("Sustained hits", key = f"sustained_hits_{i}", value = default_values["sustained_hits"])
         if sustained_hits:
-            sustained_hits_nr = col2.number_input("Sustained Hits",1,10,label_visibility="collapsed", key= f"sustained_hits_nr_{i}", value = default_values["sustained_hits_nr"])
+            sustained_hits_nr = col2.number_input("Sustained Hits",1,10,label_visibility="collapsed", key= f"sustained_hits_nr_{i}", value = max(default_values["sustained_hits_nr"],1))
         else:
             sustained_hits_nr = 0
         lethal_hits = col3.checkbox("Lethal Hits", key = f"lethal_hits_{i}", value = default_values["lethal_hits"])
         dev_wounds = col4.checkbox("Dev Wounds", key = f"dev_wounds_{i}", value = default_values["dev_wounds"])
+        if dev_wounds:
+            dev_wounds_overspill = col4.checkbox("Overspill", key = f"dev_wounds_overspill_{i}", value = default_values["dev_wounds_overspill"])
         torrent = col5.checkbox("Torrent", key = f"torrent_{i}", value = default_values["torrent"])
 
         if torrent: # the combination doesnt make sense and only screws up the plots
@@ -167,21 +155,24 @@ for i in range(st.session_state.wh_number_of_weapons):
 
         save_weapon_settings = {
             "num_dice_att":num_dice_att,
-            "dice_size_att":[3,6].index(dice_size_att),
+            "dice_size_att":Options.DICE_SIZES_ATT.index(dice_size_att),
             "modifier_att":modifier_att,
+            "start_distr": start_distr,
             "num_dice_dmg":num_dice_dmg,
-            "dice_size_dmg":[3,6].index(dice_size_dmg),
+            "dice_size_dmg":Options.DICE_SIZES_WND.index(dice_size_dmg),
             "modifier_dmg":modifier_dmg,
+            "damage_distr": damage_distr,
             "dice_threshhold_1":dice_threshhold_1,
             "dice_threshhold_2":dice_threshhold_2,
             "dice_threshhold_3":dice_threshhold_3,
             "reroll":reroll,
-            "reroll_hit":["No reroll" , "Reroll 1s", "Reroll all","Fish for crits"].index(rerolls_hit),
-            "reroll_wound":["No reroll" , "Reroll 1s", "Reroll all","Fish for crits"].index(rerolls_wound),
+            "reroll_hit":Options.REROLL_OPTIONS.index(rerolls_hit),
+            "reroll_wound":Options.REROLL_OPTIONS.index(rerolls_wound),
             "sustained_hits":sustained_hits,
             "sustained_hits_nr":sustained_hits_nr,
             "lethal_hits":lethal_hits,
             "dev_wounds":dev_wounds,
+            "dev_wounds_overspill": dev_wounds_overspill,
             "torrent": torrent,
             "crit_modifier":crit_modifier,
             "hit_roll_crit": hit_roll_crit,
@@ -192,15 +183,9 @@ for i in range(st.session_state.wh_number_of_weapons):
             "feel_no_pain_2": feel_no_pain_2
         }
         col_save.button("Save Weapon", on_click = save_weapon, args = [name, save_weapon_settings], key=f"save_button_{i}")
-    all_settings.append([
-        start_distr,
-        dice_threshhold_1,dice_threshhold_2,dice_threshhold_3,
-        hit_roll_crit,wound_roll_crit, damage_distr,
-        reroll_ones_hit, reroll_all_hit, reroll_fish_hit, 
-        reroll_ones_wound, reroll_all_wound, reroll_fish_wound,
-        sustained_hits_nr, lethal_hits,dev_wounds, torrent,
-        feel_no_pain,feel_no_pain_2
-    ])
+    all_settings.append(save_weapon_settings)
+    all_enabled.append(enabled)
+
 
 
 with st.sidebar:
@@ -227,55 +212,19 @@ with st.sidebar:
 
     st.write("")
     st.write("")
-    show_kroot = st.radio("show_kroot",["Kroot, das ist kroot", "Halp, im a tiny space marine and scared of pictures"],label_visibility="collapsed")
-    if show_kroot == "Kroot, das ist kroot":
-        show_kroot = True
-    else:
-        show_kroot = False
+    #show_kroot = st.radio("show_kroot",["Kroot, das ist kroot", "Halp, im a tiny space marine and scared of pictures"],label_visibility="collapsed")
+    #show_kroot = show_kroot == "Kroot, das ist kroot"
+    show_kroot = True
     st.write("Additional ressources:")
     st.page_link("http://wahapedia.ru/", label = "Wahapedia")
     st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
     st.page_link("https://www.linkedin.com/in/josua-keil-10546a311/", label = "Show me some Orc pictures")
 
     if show_kroot:
-        side_bg = "img/kroot.png"
-        side_bg_ext = "png"
-        with open(side_bg, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode()
-        st.markdown(
-            f"""
-            <style>
-            [data-testid="stSidebar"] > div:first-child {{
-                background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
-                        url(data:image/{side_bg_ext};base64,{encoded_string});
-                background-size : contain;
-                background-repeat: no-repeat;
-                background-position: center 75%;
-            }}
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
+        show_kroot_1()
 
 if show_kroot:
-    side_bg = "img/kroot_2.png"
-    side_bg_ext = "png"
-    with open(side_bg, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-    st.markdown(
-        f"""
-        <style>
-        [data-testid="stAppViewContainer"] {{
-            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), 
-                    url(data:image/{side_bg_ext};base64,{encoded_string});
-            background-size : 70%;
-            background-repeat: no-repeat;
-            background-position: center;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    show_kroot_2()
 
 
 if sustained_hits_nr>=2 and lethal_hits and dev_wounds:
@@ -286,29 +235,30 @@ if middle.button("Calculate"):
     st.session_state.wh_current_settings = all_settings
     st.session_state.wh_troops = troops
     st.session_state.wh_current_troops = [troops]
+    st.session_state.wh_enabled_weapons = all_enabled
 
+j = 0
+if any(st.session_state.wh_enabled_weapons):
+    last_index_to_calc = len(st.session_state.wh_enabled_weapons) - 1 - st.session_state.wh_enabled_weapons[::-1].index(True)
+else:
+    st.write("You didnt select any weapons")
 for i in range(len(st.session_state.wh_current_settings)):
-    start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,hit_roll_crit,wound_roll_crit,damage_distr,reroll_ones_hit,reroll_all_hit,reroll_fish_hit,reroll_ones_wound,reroll_all_wound,reroll_fish_wound,sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain, feel_no_pain_2 = st.session_state.wh_current_settings[i]
-    current_plot_result = (plot_results and i==len(st.session_state.wh_current_settings)-1) or plot_all_results
-    if current_plot_result:
-        st.write(f"Result for {st.session_state.wh_names_of_weapons[i]}")
-    if np.sum(st.session_state.wh_troops):
-        new_troops = complete_roll(
-        start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
-        hit_roll_crit,wound_roll_crit,damage_distr,
-        reroll_ones_hit,reroll_all_hit,reroll_fish_hit,
-        reroll_ones_wound,reroll_all_wound,reroll_fish_wound,
-        sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain, feel_no_pain_2,
-        current_plot_result, show_distr, st.session_state.wh_current_troops[i]
-        )
-        if len(st.session_state.wh_current_troops) < len(st.session_state.wh_current_settings):
-            st.session_state.wh_current_troops.append(new_troops)
-    else:        
-        complete_roll(
-            start_distr,dice_threshhold_1, dice_threshhold_2, dice_threshhold_3,
-            hit_roll_crit,wound_roll_crit,damage_distr,
-            reroll_ones_hit,reroll_all_hit,reroll_fish_hit,
-            reroll_ones_wound,reroll_all_wound,reroll_fish_wound,
-            sustained_hits_nr,lethal_hits,dev_wounds,torrent,feel_no_pain, feel_no_pain_2,
-            current_plot_result, show_distr, st.session_state.wh_troops
-        )
+    if st.session_state.wh_enabled_weapons[i]:
+        current_settings = st.session_state.wh_current_settings[i]
+        current_plot_result = (plot_results and i==last_index_to_calc) or plot_all_results
+        if current_plot_result:
+            st.write(f"Result for {st.session_state.wh_names_of_weapons[i]}")
+        if np.sum(st.session_state.wh_troops):
+            new_troops = complete_roll(
+            current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j]
+            )
+            if len(st.session_state.wh_current_troops) < sum(st.session_state.wh_enabled_weapons):#len(st.session_state.wh_current_settings):
+                st.session_state.wh_current_troops.append(new_troops)
+        else:        
+            complete_roll(
+                current_settings, current_plot_result, show_distr, st.session_state.wh_troops
+            )
+        j+=1
+
+if st.checkbox("Debug Session state"):
+    st.session_state
