@@ -50,7 +50,12 @@ with st.sidebar:
     plot_results = st.checkbox("Plot Results", value = True)
     if plot_results:
         plot_all_results = st.checkbox("Plot all results")
+    else:
+        plot_all_results = False
 
+    plot_sum = st.checkbox("Plot dmg + mortals", value = True)
+    plot_sep = st.checkbox("Plot dmg and mortals seperate", value = False)
+    
     show_distr = st.checkbox("Show distribution")
 
     st.write("")
@@ -286,12 +291,12 @@ if any(st.session_state.wh_enabled_weapons):
                 st.write(f"Result for {st.session_state.wh_names_of_weapons[i]}")
             if np.sum(st.session_state.wh_troops):
                 new_troops = complete_roll(
-                current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j]
+                current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j], plot_sep, plot_sum
                 )
                 if len(st.session_state.wh_current_troops) < sum(st.session_state.wh_enabled_weapons):#len(st.session_state.wh_current_settings):
                     st.session_state.wh_current_troops.append(new_troops)
             else:        
                 complete_roll(
-                    current_settings, current_plot_result, show_distr, st.session_state.wh_troops
+                    current_settings, current_plot_result, show_distr, st.session_state.wh_troops, plot_sep, plot_sum
                 )
             j+=1

@@ -5,7 +5,9 @@ import base64
 
 
 
-def plot_result(hit_roll, auto_crit, col, title, custom_text = None):
+def plot_result(hit_roll, auto_crit, col, title, custom_text = None, plot_sep = True, plot_sum = True):
+    if title != "Damage":
+        title += "s"
     plot_roll = get_threshhold_plot(hit_roll)
     if not auto_crit:
 
@@ -24,35 +26,75 @@ def plot_result(hit_roll, auto_crit, col, title, custom_text = None):
             expected_2 += i*hit_roll[i]
         if custom_text:
             return f"Expected nr of {custom_text}: {np.round(expected_2,3)}"
-        return f"Expected nr of {title}s: {np.round(expected_2,3)}"
+        return f"Expected nr of {title}: {np.round(expected_2,3)}"
     else:
-        hits = hit_roll.sum(axis=1)
-        crits = hit_roll.sum(axis=0)
-        if len(hits)>len(crits):
-            crits = np.pad(crits, (0, len(hits)-len(crits)), mode="constant")
-        
-        [hits_plot, crits_plot] = get_threshhold_plot([hits,crits], multi_list=True)
-        
-        width = 0.35
-        fig, ax = plt.subplots()
-        ax.bar(np.arange(len(hits_plot))-width/2,hits_plot,width, label = "Hits", color = "blue")
-        ax.bar(np.arange(len(hits_plot))+width/2,crits_plot,width, label = "Crits", color = "red")
-        ax.set_xticks(range(0,len(hits_plot)+1,np.max([1,len(hits_plot)//10])))
-        ax.set_title(title+" roll")
-        ax.set_ylabel("Density")
-        ax2 = ax.twinx()
-        ax2.plot(range(len(hits_plot)), np.cumsum(hits_plot), color='blue', marker='o', linestyle='-', label='Hits')
-        ax2.plot(range(len(crits_plot)), np.cumsum(crits_plot), color='red', marker='o', linestyle='-', label='Crits')
-        ax2.set_ylabel('Distribution')
-        ax2.set_ylim([0,1])
-        ax.legend(loc = "upper left")
-        st.pyplot(fig)
-        expected_1 = 0
-        expected_1_2 = 0
-        for i in range(len(hits)):
-            expected_1 += i*hits[i]
-            expected_1_2 += i*crits[i]
-        return f"Expected nr of {title}s / crits: {np.round(expected_1,3)} / {np.round(expected_1_2,3)}"
+        if any([plot_sep,plot_sum]):
+            fig, ax = plt.subplots()
+            ax2 = ax.twinx()
+            hits = hit_roll.sum(axis=1)
+            crits = hit_roll.sum(axis=0)
+
+            if len(hits)>len(crits):
+                crits = np.pad(crits, (0, len(hits)-len(crits)), mode="constant")
+
+            if plot_sep and plot_sum:
+                width = 0.25
+                hit_move = -width
+                crit_move = 0
+                sum_move = width
+            else:
+                width = 0.35
+                hit_move = - width/2
+                crit_move = width/2
+                sum_move = 0
+
+            if plot_sum:
+                plot_color_sum = "black" if plot_sep else "blue"
+                num_sums = hit_roll.shape[0] + hit_roll.shape[1] - 1
+                total = np.array([np.sum(np.diagonal(hit_roll[::-1,:], offset=i-hit_roll.shape[0]+1)) for i in range(num_sums)])
+            
+                sum_plot = get_threshhold_plot(total)
+                
+                ax.bar(np.arange(len(sum_plot))+sum_move,sum_plot,width, label = "Total", color = plot_color_sum)
+                ax.set_xticks(range(0,len(sum_plot)+1,np.max([1,len(sum_plot)//10])))
+                ax.set_title(title+" roll")
+                ax.set_ylabel("Density")
+                ax2.plot(range(len(sum_plot)), np.cumsum(sum_plot), color=plot_color_sum, marker='o', linestyle='-', label='Total')
+                ax2.set_ylabel('Distribution')
+                ax2.set_ylim([0,1])
+                # ax.legend(loc = "upper left")
+                expected = 0
+                for i in range(len(total)):
+                    expected += i*total[i]
+            if plot_sep:
+                [hits_plot, crits_plot] = get_threshhold_plot([hits,crits], multi_list=True)
+                ax.bar(np.arange(len(hits_plot))+hit_move,hits_plot,width, label = "Hits", color = "blue")
+                ax.bar(np.arange(len(hits_plot))+crit_move,crits_plot,width, label = "Crits", color = "red")
+                if not plot_sum:
+                    ax.set_xticks(range(0,len(hits_plot)+1,np.max([1,len(hits_plot)//10])))
+                ax.set_title(title+" roll")
+                ax.set_ylabel("Density")
+                ax2.plot(range(len(hits_plot)), np.cumsum(hits_plot), color='blue', marker='o', linestyle='-', label='Hits')
+                ax2.plot(range(len(crits_plot)), np.cumsum(crits_plot), color='red', marker='o', linestyle='-', label='Crits')
+                ax2.set_ylabel('Distribution')
+                ax2.set_ylim([0,1])
+                ax.legend(loc = "upper left")
+                expected_1 = 0
+                expected_1_2 = 0
+                for i in range(len(hits)):
+                    expected_1 += i*hits[i]
+                    expected_1_2 += i*crits[i]
+
+            
+            st.pyplot(fig)
+            
+            if plot_sep and not plot_sum:
+                return f"Expected nr of {title}: {np.round(expected_1,3)} / crits: {np.round(expected_1_2,3)}"
+            elif not plot_sep and plot_sum:
+                return f"Expected nr of total {title}: {np.round(expected,3)}"
+            elif plot_sep and plot_sum:
+                return f"Expected nr of {title}: {np.round(expected_1,3)} / crits: {np.round(expected_1_2,3)} / total {title}: {np.round(expected,3)}"
+        return ""
 
 
 def get_threshhold_plot(dice_roll, threshhold = 0.999, multi_list = False):
