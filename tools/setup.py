@@ -16,4 +16,4 @@ def setup_40k():
     st.session_state.wh_default_weapon_values = [None]
     st.session_state.wh_saved_weapons = {}
     st.session_state.wh_enabled_weapons = [True]
-    st.session_state.wh_names_of_weapons = ["Weapon Nr 1"]
+    st.session_state.wh_names_of_weapons = ["Weapon Nr. 1"]
