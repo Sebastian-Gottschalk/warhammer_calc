@@ -17,25 +17,63 @@ from tools.setup import setup_40k
 
 ### STREAMLIT INTERFACE
 
+# setup
 if "setup_40k" not in st.session_state:
     setup_40k()
     st.session_state.setup_40k = True
 
-_,minus,middle,plus,col_weapon_load = st.columns(5)
 
+# Buttons to add / remove weapons
+_,minus,middle,plus,col_weapon_load = st.columns(5)
 minus.button(":heavy_minus_sign:", on_click=remove_weapon, disabled= st.session_state.wh_number_of_weapons == 1)
 weapon_to_load = col_weapon_load.selectbox("Select Weapon to add", options = ["default"] + list(st.session_state.wh_saved_weapons.keys()))
 plus.button(":heavy_plus_sign:", on_click=add_weapon, args = [weapon_to_load])
 middle.write(f"Current Nr of weapons: {st.session_state.wh_number_of_weapons}")
 
+# setting up the sidebar options
+with st.sidebar:
+
+    fight_troop = st.checkbox("Shoot on dudes")
+
+    if fight_troop:
+        co1, co2 = st.columns(2)
+        with co1:
+            amount_of_troops = st.number_input("Units",1,100,value=10)
+        with co2:
+            wounds_per_troop = st.number_input("Wounds",1,20,value=3)
+        troops = np.zeros((wounds_per_troop+1,amount_of_troops))
+        troops[wounds_per_troop,0] = 1
+    else:
+        troops = 0
+
+    
+    plot_results = st.checkbox("Plot Results", value = True)
+    if plot_results:
+        plot_all_results = st.checkbox("Plot all results")
+
+    show_distr = st.checkbox("Show distribution")
+
+    st.write("")
+    st.write("")
+    #show_kroot = st.radio("show_kroot",["Kroot, das ist kroot", "Halp, im a tiny space marine and scared of pictures"],label_visibility="collapsed")
+    #show_kroot = show_kroot == "Kroot, das ist kroot"
+    show_kroot = True
+    st.write("Additional ressources:")
+    st.page_link("http://wahapedia.ru/", label = "Wahapedia")
+    st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
+    st.page_link("https://www.linkedin.com/in/josua-keil-10546a311/", label = "Show me some Orc pictures")
+
+    if show_kroot:
+        show_kroot_1()
+
+if show_kroot:
+    show_kroot_2()
 
 all_settings = []
 all_enabled = []
 
-if "wh_names_of_weapons" not in st.session_state:
-    st.session_state.wh_names_of_weapons = ["Weapon Nr 1"]
 
-
+# creating the expanders for weapon selections
 for i in range(st.session_state.wh_number_of_weapons):
     if st.session_state.wh_default_weapon_values[i]:
         default_values = st.session_state.wh_default_weapon_values[i]
@@ -43,7 +81,40 @@ for i in range(st.session_state.wh_number_of_weapons):
         default_values = Default_weapon.default_wh_weapon
     
     left, right = st.columns([1,30])
+    left.markdown(
+        """
+        <style>
+        /* Target all checkboxes */
+        div[data-testid="stCheckbox"] {
+            margin-top: 10px;  /* Moves checkbox down */
+        }
+
+        /* Optionally, adjust the checkbox input height */
+        div[data-testid="stCheckbox"] input[type="checkbox"] {
+            transform: scale(1.2);  /* Makes the checkbox bigger */
+            margin-right: 8px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
     enabled = left.checkbox(" ", key=f"wh_enabled_{i}", value = True)
+
+    # Markdown to set the background of expander objects
+    right.markdown(
+        """
+        <style>
+        /* Style the expander container */
+        div[data-testid="stExpander"] {
+            background-color: rgba(0, 0, 0, 0.8) !important;  /* Dark gray opaque */
+            border-radius: 8px !important;
+            padding: 0 !important;
+            color: white !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
     with right.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}"):
         left,_, col_save = st.columns([7,1,1])
         name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key=f"wh_enter_name_{i}")
@@ -188,48 +259,13 @@ for i in range(st.session_state.wh_number_of_weapons):
 
 
 
-with st.sidebar:
-
-    fight_troop = st.checkbox("Shoot on dudes")
-
-    if fight_troop:
-        co1, co2 = st.columns(2)
-        with co1:
-            amount_of_troops = st.number_input("Units",1,100,value=10)
-        with co2:
-            wounds_per_troop = st.number_input("Wounds",1,20,value=3)
-        troops = np.zeros((wounds_per_troop+1,amount_of_troops))
-        troops[wounds_per_troop,0] = 1
-    else:
-        troops = 0
-
-    
-    plot_results = st.checkbox("Plot Results", value = True)
-    if plot_results:
-        plot_all_results = st.checkbox("Plot all results")
-
-    show_distr = st.checkbox("Show distribution")
-
-    st.write("")
-    st.write("")
-    #show_kroot = st.radio("show_kroot",["Kroot, das ist kroot", "Halp, im a tiny space marine and scared of pictures"],label_visibility="collapsed")
-    #show_kroot = show_kroot == "Kroot, das ist kroot"
-    show_kroot = True
-    st.write("Additional ressources:")
-    st.page_link("http://wahapedia.ru/", label = "Wahapedia")
-    st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
-    st.page_link("https://www.linkedin.com/in/josua-keil-10546a311/", label = "Show me some Orc pictures")
-
-    if show_kroot:
-        show_kroot_1()
-
-if show_kroot:
-    show_kroot_2()
 
 
 if sustained_hits_nr>=2 and lethal_hits and dev_wounds:
     st.write("The plots and future calculations are wrong. To-do: fix")
 
+
+# Setting up the Calculate Button and updating session states if pressed
 _,middle,_ = st.columns([3,1,3])
 if middle.button("Calculate"):
     st.session_state.wh_current_settings = all_settings
@@ -237,26 +273,25 @@ if middle.button("Calculate"):
     st.session_state.wh_current_troops = [troops]
     st.session_state.wh_enabled_weapons = all_enabled
 
-j = 0
-if any(st.session_state.wh_enabled_weapons):
-    last_index_to_calc = len(st.session_state.wh_enabled_weapons) - 1 - st.session_state.wh_enabled_weapons[::-1].index(True)
-for i in range(len(st.session_state.wh_current_settings)):
-    if st.session_state.wh_enabled_weapons[i]:
-        current_settings = st.session_state.wh_current_settings[i]
-        current_plot_result = (plot_results and i==last_index_to_calc) or plot_all_results
-        if current_plot_result:
-            st.write(f"Result for {st.session_state.wh_names_of_weapons[i]}")
-        if np.sum(st.session_state.wh_troops):
-            new_troops = complete_roll(
-            current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j]
-            )
-            if len(st.session_state.wh_current_troops) < sum(st.session_state.wh_enabled_weapons):#len(st.session_state.wh_current_settings):
-                st.session_state.wh_current_troops.append(new_troops)
-        else:        
-            complete_roll(
-                current_settings, current_plot_result, show_distr, st.session_state.wh_troops
-            )
-        j+=1
 
-if st.checkbox("Debug Session state"):
-    st.session_state
+### doing the calculations with the selected weapons
+if any(st.session_state.wh_enabled_weapons):
+    j = 0
+    last_index_to_calc = len(st.session_state.wh_enabled_weapons) - 1 - st.session_state.wh_enabled_weapons[::-1].index(True)
+    for i in range(len(st.session_state.wh_current_settings)):
+        if st.session_state.wh_enabled_weapons[i]:
+            current_settings = st.session_state.wh_current_settings[i]
+            current_plot_result = (plot_results and i==last_index_to_calc) or plot_all_results
+            if current_plot_result:
+                st.write(f"Result for {st.session_state.wh_names_of_weapons[i]}")
+            if np.sum(st.session_state.wh_troops):
+                new_troops = complete_roll(
+                current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j]
+                )
+                if len(st.session_state.wh_current_troops) < sum(st.session_state.wh_enabled_weapons):#len(st.session_state.wh_current_settings):
+                    st.session_state.wh_current_troops.append(new_troops)
+            else:        
+                complete_roll(
+                    current_settings, current_plot_result, show_distr, st.session_state.wh_troops
+                )
+            j+=1
