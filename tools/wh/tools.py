@@ -24,15 +24,27 @@ def add_weapon(name):
     if name == "default":
         st.session_state.wh_names_of_weapons.append(f"Weapon Nr. {st.session_state.wh_number_of_weapons}")
         st.session_state.wh_default_weapon_values.append(None)
+        st.session_state.wh_current_settings_wo_calc.append(Default_weapon.default_wh_weapon)
     else:
         st.session_state.wh_names_of_weapons.append(name)
         st.session_state.wh_default_weapon_values.append(st.session_state.wh_saved_weapons[name])
+        st.session_state.wh_current_settings_wo_calc.append(st.session_state.wh_saved_weapons[name])
 
 def remove_weapon():
     if st.session_state.wh_number_of_weapons >1:
         st.session_state.wh_number_of_weapons -=1
         st.session_state.wh_names_of_weapons.pop()
         st.session_state.wh_default_weapon_values.pop()
+        st.session_state.wh_current_settings_wo_calc.pop()
 
 def save_weapon(name, settings):
     st.session_state.wh_saved_weapons[name] = settings
+
+def swap_weapons(settings,old_index, new_index):
+    st.session_state.wh_current_settings_wo_calc = settings
+    st.session_state.wh_current_settings_wo_calc[old_index], st.session_state.wh_current_settings_wo_calc[new_index] = (
+        st.session_state.wh_current_settings_wo_calc[new_index], st.session_state.wh_current_settings_wo_calc[old_index]
+    )
+    st.session_state.wh_names_of_weapons[old_index], st.session_state.wh_names_of_weapons[new_index] = (
+        st.session_state.wh_names_of_weapons[new_index], st.session_state.wh_names_of_weapons[old_index]
+    )

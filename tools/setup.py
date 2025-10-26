@@ -17,3 +17,5 @@ def setup_40k():
     st.session_state.wh_saved_weapons = {}
     st.session_state.wh_enabled_weapons = [True]
     st.session_state.wh_names_of_weapons = ["Weapon Nr. 1"]
+    st.session_state.wh_current_names_of_weapons = st.session_state.wh_names_of_weapons.copy()
+    st.session_state.wh_current_settings_wo_calc = st.session_state.wh_current_settings.copy()

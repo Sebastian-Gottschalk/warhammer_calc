@@ -77,15 +77,21 @@ if show_kroot:
 all_settings = []
 all_enabled = []
 
-
+all_right_columns = []
 # creating the expanders for weapon selections
 for i in range(st.session_state.wh_number_of_weapons):
     if st.session_state.wh_default_weapon_values[i]:
         default_values = st.session_state.wh_default_weapon_values[i]
     else:
         default_values = Default_weapon.default_wh_weapon
+
+    # TEST TEST TEST
+    # TEST      TEST
+    # TEST TEST TEST
+    default_values = st.session_state.wh_current_settings_wo_calc[i]
     
-    left, right = st.columns([1,30])
+    left,middle, right = st.columns([1,30,1])
+    all_right_columns.append(right)
     left.markdown(
         """
         <style>
@@ -106,7 +112,7 @@ for i in range(st.session_state.wh_number_of_weapons):
     enabled = left.checkbox(" ", key=f"wh_enabled_{i}", value = True)
 
     # Markdown to set the background of expander objects
-    right.markdown(
+    middle.markdown(
         """
         <style>
         /* Style the expander container */
@@ -120,7 +126,7 @@ for i in range(st.session_state.wh_number_of_weapons):
         """,
         unsafe_allow_html=True
     )
-    with right.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}"):
+    with middle.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}"):
         left,_, col_save = st.columns([7,1,1])
         name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key=f"wh_enter_name_{i}")
         if name != st.session_state.wh_names_of_weapons[i]:
@@ -262,12 +268,17 @@ for i in range(st.session_state.wh_number_of_weapons):
     all_settings.append(save_weapon_settings)
     all_enabled.append(enabled)
 
-
+for i in range(st.session_state.wh_number_of_weapons):
+    right = all_right_columns[i]
+    right.button("", icon = ":material/arrow_drop_up:", key= f"weapon_move_up_{i}", disabled = i == 0, on_click = swap_weapons, args = [all_settings,i,i-1])
+    right.button("", icon = ":material/arrow_drop_down:", key= f"weapon_move_down_{i}",disabled = i == st.session_state.wh_number_of_weapons -1, on_click = swap_weapons, args = [all_settings,i,i+1])
+    
 
 
 
 if sustained_hits_nr>=2 and lethal_hits and dev_wounds:
     st.write("The plots and future calculations are wrong. To-do: fix")
+
 
 
 # Setting up the Calculate Button and updating session states if pressed
@@ -277,6 +288,9 @@ if middle.button("Calculate"):
     st.session_state.wh_troops = troops
     st.session_state.wh_current_troops = [troops]
     st.session_state.wh_enabled_weapons = all_enabled
+    st.session_state.wh_current_names_of_weapons = st.session_state.wh_names_of_weapons.copy()
+    
+    st.rerun()
 
 
 ### doing the calculations with the selected weapons
@@ -288,7 +302,7 @@ if any(st.session_state.wh_enabled_weapons):
             current_settings = st.session_state.wh_current_settings[i]
             current_plot_result = (plot_results and i==last_index_to_calc) or plot_all_results
             if current_plot_result:
-                st.write(f"Result for {st.session_state.wh_names_of_weapons[i]}")
+                st.write(f"Result for {st.session_state.wh_current_names_of_weapons[i]}")
             if np.sum(st.session_state.wh_troops):
                 new_troops = complete_roll(
                 current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j], plot_sep, plot_sum
