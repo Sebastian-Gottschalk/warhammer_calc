@@ -2,11 +2,13 @@ import streamlit as st
 
 class Default_weapon:
     default_wh_weapon = {
+        "weapon_kind" : 1,
         "num_dice_att" : 0, "dice_size_att" : 1, "modifier_att" : 3,
         "start_distr" : [0,0,0,1],
         "num_dice_dmg" : 0, "dice_size_dmg" : 1, "modifier_dmg" : 3,
         "damage_distr" : [0,0,0,1],
-        "dice_threshhold_1" : 4, "dice_threshhold_2" : 4,"dice_threshhold_3" : 4,
+        "dice_threshhold_1" : 4,"strength" : 6, "modifier" : 0, "dice_threshhold_2" : 4,
+        "ap": 0, "dice_threshhold_3" : 4,
         "reroll": False, "reroll_hit": 0, "reroll_wound" : 0,
         "sustained_hits" : False, "sustained_hits_nr" : 0,
         "lethal_hits" : False, "dev_wounds" : False,"dev_wounds_overspill" : False, "torrent" : False,
@@ -18,6 +20,7 @@ class Options:
     DICE_SIZES_ATT = [3,6]
     DICE_SIZES_WND = [3,6]
     REROLL_OPTIONS = ["No reroll", "Reroll 1s", "Reroll all", "Fish for crits", "Fish for hits"]
+    WEAPON_OPTIONS = ["Melee", "Ranged"]
 
 def add_weapon(name):
     st.session_state.wh_number_of_weapons +=1

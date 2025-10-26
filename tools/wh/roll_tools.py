@@ -152,9 +152,9 @@ def get_wound_threshhold(strength, toughness,modifier = 0, fixed_value = 0):
         return_value =  6
     
     # add the modifier and clip it into the range from 2 to 6
-    return_value += modifier
-    return_value = np.min(return_value, 6)
-    return_value = np.max(return_value, 2)
+    return_value -= modifier
+    return_value = min([return_value, 6])
+    return_value = max([return_value, 2])
 
     return return_value
 
