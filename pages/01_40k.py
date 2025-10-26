@@ -193,7 +193,7 @@ for i in range(st.session_state.wh_number_of_weapons):
         if sustained_hits:
             sustained_hits_nr = col2.number_input("Sustained Hits",1,10,label_visibility="collapsed", key=f"wh_sustained_hits_nr_{i}", value = max(default_values["sustained_hits_nr"],1))
         else:
-            sustained_hits_nr = 0
+            sustained_hits_nr = 0a
         lethal_hits = col3.checkbox("Lethal Hits", key=f"wh_lethal_hits_{i}", value = default_values["lethal_hits"])
         dev_wounds = col4.checkbox("Dev Wounds", key=f"wh_dev_wounds_{i}", value = default_values["dev_wounds"])
         if dev_wounds:
@@ -210,9 +210,9 @@ for i in range(st.session_state.wh_number_of_weapons):
         else:
             hit_roll_crit=6
             wound_roll_crit=6
-        fnp_checkbox =  col7.checkbox("Feel No Pain", key=f"wh_feel_no_pain_{i}", value = default_values["feel_no_pain"])
+        fnp_checkbox =  col7.checkbox("Feel No Pain", key=f"wh_feel_no_pain_{i}", value = default_values["feel_no_pain_setting"])
         if fnp_checkbox:
-            feel_no_pain = col7.number_input("Normal FnP",2,7,value=default_values["feel_no_pain_1"],label_visibility="collapsed", key=f"wh_normal_fnp_{i}")
+            feel_no_pain = col7.number_input("Normal FnP",2,7,value=default_values["feel_no_pain"],label_visibility="collapsed", key=f"wh_normal_fnp_{i}")
             fnp_checkbox_mortals = col7.checkbox("Different FnP on Mortals", key=f"wh_weird_stuff_{i}", value = default_values["fnp_checkbox_mortals"])
             if fnp_checkbox_mortals:
                 feel_no_pain_2 = col7.number_input("DevWounds FnP",2,7,value=default_values["feel_no_pain_2"],label_visibility="collapsed")
@@ -248,8 +248,8 @@ for i in range(st.session_state.wh_number_of_weapons):
             "crit_modifier":crit_modifier,
             "hit_roll_crit": hit_roll_crit,
             "wound_roll_crit": wound_roll_crit,
-            "feel_no_pain": fnp_checkbox,
-            "feel_no_pain_1": feel_no_pain,
+            "feel_no_pain_setting": fnp_checkbox,
+            "feel_no_pain": feel_no_pain,
             "fnp_checkbox_mortals": fnp_checkbox_mortals,
             "feel_no_pain_2": feel_no_pain_2
         }

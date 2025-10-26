@@ -11,7 +11,7 @@ class Default_weapon:
         "sustained_hits" : False, "sustained_hits_nr" : 0,
         "lethal_hits" : False, "dev_wounds" : False,"dev_wounds_overspill" : False, "torrent" : False,
         "crit_modifier" : False, "hit_roll_crit" : 6, "wound_roll_crit" : 6,
-        "feel_no_pain" : False, "feel_no_pain_1" : 6, "fnp_checkbox_mortals": False, "feel_no_pain_2" : 6
+        "feel_no_pain_setting" : False, "feel_no_pain" : 6, "fnp_checkbox_mortals": False, "feel_no_pain_2" : 6
     }
 
 class Options:
