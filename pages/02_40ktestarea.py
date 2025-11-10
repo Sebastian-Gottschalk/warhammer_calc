@@ -238,22 +238,16 @@ for i in range(st.session_state.wh_number_of_weapons):
             dev_wounds_overspill = col4.checkbox("Overspill", key=f"wh_dev_wounds_overspill_{i}", value = default_values["dev_wounds_overspill"])
         if torrent: # the combination doesnt make sense and only screws up the plots
             lethal_hits = False
-        if crit_modifier:
-            hit_roll_crit = col6.number_input("Hit roll critting on",dice_threshhold_1,6,value=default_values["hit_roll_crit"], key=f"wh_hit_roll_crit_{i}")
-            wound_roll_crit = col6.number_input("Wound roll critting on", dice_threshhold_2,6, value=default_values["wound_roll_crit"], key=f"wh_wound_roll_crit_{i}")
-        else:
-            hit_roll_crit=6
-            wound_roll_crit=6
         if fnp_checkbox:
-            feel_no_pain = col7.number_input("Normal FnP",2,7,value=default_values["feel_no_pain"],label_visibility="collapsed", key=f"wh_normal_fnp_{i}")
+            feel_no_pain = col7.number_input("Normal FnP",2,7,value=max(default_values["feel_no_pain"],2),label_visibility="collapsed", key=f"wh_normal_fnp_{i}")
             fnp_checkbox_mortals = col7.checkbox("Different FnP on Mortals", key=f"wh_weird_stuff_{i}", value = default_values["fnp_checkbox_mortals"])
             if fnp_checkbox_mortals:
                 feel_no_pain_2 = col7.number_input("DevWounds FnP",2,7,value=default_values["feel_no_pain_2"],label_visibility="collapsed")
             else:
                 feel_no_pain_2 = feel_no_pain     
         else:
-            feel_no_pain = 0
-            feel_no_pain_2 = 0
+            feel_no_pain = 6
+            feel_no_pain_2 = 6
             fnp_checkbox_mortals = False
 
         if fight_troop:
@@ -267,6 +261,13 @@ for i in range(st.session_state.wh_number_of_weapons):
             dice_threshhold_2 = get_wound_threshhold(strength,toughness,modifier, fix_hit)
         else:
             fix_hit = 0
+
+        if crit_modifier:
+            hit_roll_crit = col6.number_input("Hit roll critting on",dice_threshhold_1,6,value=default_values["hit_roll_crit"], key=f"wh_hit_roll_crit_{i}")
+            wound_roll_crit = col6.number_input("Wound roll critting on", dice_threshhold_2,6, value=default_values["wound_roll_crit"], key=f"wh_wound_roll_crit_{i}")
+        else:
+            hit_roll_crit=6
+            wound_roll_crit=6
 
         save_weapon_settings = {
             "weapon_kind" : Options.WEAPON_OPTIONS.index(weapon_kind),
