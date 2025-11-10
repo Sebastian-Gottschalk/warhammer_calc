@@ -23,7 +23,7 @@ def single_roll(n, thresh, reroll: int,critting_on: int = 6):
     p_crit = (7-critting_on)/6
     p_hit = (critting_on-thresh)/6
 
-    if not any(reroll_ones,reroll_all,reroll_fish,reroll_fish_2):
+    if not any([reroll_ones,reroll_all,reroll_fish,reroll_fish_2]):
         # just a normal one time roll
         p = [p_hit,p_crit,1-p_hit-p_crit]
         for i in range(n+1):
