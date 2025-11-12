@@ -1,6 +1,10 @@
 import streamlit as st
 
+
 class Default_weapon:
+    '''
+    Class for the Default Weapon Options to use when creating a default weapon
+    '''
     default_wh_weapon = {
         "weapon_kind" : 1,
         "num_dice_att" : 0, "dice_size_att" : 1, "modifier_att" : 3,
@@ -18,6 +22,9 @@ class Default_weapon:
     }
 
 class Options:
+    '''
+    Class for some Options for different Dice sizes etc
+    '''
     DICE_SIZES_ATT = [3,6]
     DICE_SIZES_WND = [3,6]
     REROLL_OPTIONS = ["No reroll", "Reroll 1s", "Reroll all", "Fish for crits", "Fish for hits"]

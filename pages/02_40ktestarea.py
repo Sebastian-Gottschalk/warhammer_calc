@@ -239,7 +239,7 @@ for i in range(st.session_state.wh_number_of_weapons):
         if torrent: # the combination doesnt make sense and only screws up the plots
             lethal_hits = False
         if fnp_checkbox:
-            feel_no_pain = col7.number_input("Normal FnP",2,7,value=max(default_values["feel_no_pain"],2),label_visibility="collapsed", key=f"wh_normal_fnp_{i}")
+            feel_no_pain = col7.number_input("Normal FnP",2,7,value=default_values["feel_no_pain"],label_visibility="collapsed", key=f"wh_normal_fnp_{i}")
             fnp_checkbox_mortals = col7.checkbox("Different FnP on Mortals", key=f"wh_weird_stuff_{i}", value = default_values["fnp_checkbox_mortals"])
             if fnp_checkbox_mortals:
                 feel_no_pain_2 = col7.number_input("DevWounds FnP",2,7,value=default_values["feel_no_pain_2"],label_visibility="collapsed")

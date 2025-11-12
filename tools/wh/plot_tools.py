@@ -4,7 +4,6 @@ import numpy as np
 import base64
 
 
-
 def plot_result(hit_roll, auto_crit, col, title, custom_text = None, plot_sep = True, plot_sum = True):
     if title != "Damage":
         title += "s"
@@ -96,7 +95,6 @@ def plot_result(hit_roll, auto_crit, col, title, custom_text = None, plot_sep = 
                 return f"Expected nr of {title}: {np.round(expected_1,3)} / crits: {np.round(expected_1_2,3)} / total {title}: {np.round(expected,3)}"
         return ""
 
-
 def get_threshhold_plot(dice_roll, threshhold = 0.999, multi_list = False):
     if not multi_list:
         if np.sum(dice_roll)<=0.999:
@@ -115,7 +113,6 @@ def get_threshhold_plot(dice_roll, threshhold = 0.999, multi_list = False):
                 max_index = dice_roll_index
         return [dice_result[:max_index] for dice_result in dice_roll]
     
-
 def show_kroot_1():
     side_bg = "img/kroot.png"
     side_bg_ext = "png"

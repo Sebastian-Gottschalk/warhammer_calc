@@ -6,7 +6,6 @@ from scipy.stats import  multinomial, binom
 import pandas as pd
 
 
-
 @st.cache_data
 def complete_roll(
         settings, plot_results, show_distr, troops, plot_sep, plot_sum
@@ -226,10 +225,6 @@ def complete_roll(
     else:
         return damage_roll
 
-
-
-
-
 @st.cache_data
 def hit_roll(start_distr,dice_threshhold_1,reroll_hit,hit_roll_crit,sustained_hits_nr,lethal_hits,torrent):
     ### HIT ROLL
@@ -240,7 +235,6 @@ def hit_roll(start_distr,dice_threshhold_1,reroll_hit,hit_roll_crit,sustained_hi
         hit_roll_hits = start_distr
         
     return hit_roll_hits
-
 
 @st.cache_data
 def wound_roll(hit_roll_hits,dice_threshhold_2,reroll_wound,wound_roll_crit,sustained_hits_nr,lethal_hits,torrent,dev_wounds):
@@ -265,7 +259,6 @@ def wound_roll(hit_roll_hits,dice_threshhold_2,reroll_wound,wound_roll_crit,sust
         wound_roll_hits = get_amount_of_hits(wound_roll, crit_auto_hit=dev_wounds)
     
     return wound_roll_hits
-
 
 @st.cache_data
 def save_roll(wound_roll_hits,dice_threshhold_3,dev_wounds,no_save_roll):

@@ -4,6 +4,7 @@ from scipy.stats import  multinomial, binom
 import pandas as pd
 from tools.wh.tools import Options
 
+
 @st.cache_data
 def single_roll(n, thresh, reroll: int,critting_on: int = 6):
     '''
@@ -177,18 +178,19 @@ def get_wound_threshhold(strength, toughness,modifier = 0, fixed_value = 0):
 
     return return_value
 
-
-# save_roll_hits:
-#   distribution of how many saves failed - independent of MW or not, in case of MW call this function twice
-# damage_distr:
-#   distribution of how much dmg each failed save will inflict
-# troop:
-#   numpy-array in the shape (wound_per_unit+1, amount_units)
-# eg
-#  [0 0
-#   1 0]
-#   generally troop[i,k] is equal to the probability that amount_units-k units are still alive and one of them still has i HP
-#   note that p[0,k] should always be 0 except for p[0,amount_units] in which case this value represents the chance of the whole squad dying
+'''
+save_roll_hits:
+  distribution of how many saves failed - independent of MW or not, in case of MW call this function twice
+damage_distr:
+  distribution of how much dmg each failed save will inflict
+troop:
+  numpy-array in the shape (wound_per_unit+1, amount_units)
+eg
+ [0 0
+  1 0]
+  generally troop[i,k] is equal to the probability that amount_units-k units are still alive and one of them still has i HP
+  note that p[0,k] should always be 0 except for p[0,amount_units] in which case this value represents the chance of the whole squad dying
+'''
 @st.cache_data
 def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain, mortal_wounds):
     wounds = troop.shape[0]-1
