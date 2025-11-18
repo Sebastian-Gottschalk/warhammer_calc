@@ -6,10 +6,9 @@ import pandas as pd
 import base64
 
 from tools.wh.plot_tools import *
-from tools.wh.roll_tools import *
+from tools.general.roll_tools import *
 from tools.wh.complete_roll import *
-from tools.wh.tools import *
-from tools.setup import setup_40k
+from tools.wh.gen import *
 
 
 
@@ -88,6 +87,8 @@ all_right_columns = []
 for i in range(st.session_state.wh_number_of_weapons):
     # read the currently saved value from the session state
     default_values = st.session_state.wh_current_settings_wo_calc[i]
+    k = st.session_state.wh_expander_tracker[i]
+    
     
     left,middle, right = st.columns([1,30,1])
     all_right_columns.append(right) # saving that column for the swap weapon option
@@ -110,7 +111,7 @@ for i in range(st.session_state.wh_number_of_weapons):
         """,
         unsafe_allow_html=True
     )
-    enabled = left.checkbox(" ", key=f"wh_enabled_{i}", value = True)
+    enabled = left.checkbox(" ", key=f"wh_enabled_{k}", value = True)
 
     # Markdown to set the background of expander objects
     middle.markdown(
@@ -127,12 +128,13 @@ for i in range(st.session_state.wh_number_of_weapons):
         """,
         unsafe_allow_html=True
     )
-    
+
     # Building the Options for the user to choose and saving the resulting weapon in a variable
-    with middle.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}"):
+    with middle.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}", expanded = st.session_state.wh_expanders[i]):
+        st.session_state.wh_expanders[i] = True
         left,middle, col_save = st.columns([7,1,1])
-        name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key=f"wh_enter_name_{i}")
-        weapon_kind = middle.selectbox(" ",Options.WEAPON_OPTIONS, index = default_values["weapon_kind"],key = f"wh_weapon_kind_{i}")
+        name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key=f"wh_enter_name_{k}")
+        weapon_kind = middle.selectbox(" ",Options.WEAPON_OPTIONS, index = default_values["weapon_kind"],key = f"wh_weapon_kind_{k}")
         if name != st.session_state.wh_names_of_weapons[i]:
             st.session_state.wh_names_of_weapons[i] = name
             st.rerun()
@@ -145,11 +147,11 @@ for i in range(st.session_state.wh_number_of_weapons):
 
         _,coll1,_, coll2,_, coll3,_ = main_col_1.columns([0.25,1,0.125,0.75,0.125,1,0.25])
         with coll1:
-            num_dice_att = st.number_input("Dice", min_value=0, value=default_values["num_dice_att"], key=f"wh_num_dice_1_{i}")
+            num_dice_att = st.number_input("Dice", min_value=0, value=default_values["num_dice_att"], key=f"wh_num_dice_1_{k}")
         with coll2:
-            dice_size_att = int(st.radio("_", ["W"+str(number) for number in Options.DICE_SIZES_ATT], key=f"wh_dice_size_1_{i}", label_visibility = "hidden", index = default_values["dice_size_att"])[1:])
+            dice_size_att = int(st.radio("_", ["W"+str(number) for number in Options.DICE_SIZES_ATT], key=f"wh_dice_size_1_{k}", label_visibility = "hidden", index = default_values["dice_size_att"])[1:])
         with coll3:
-            modifier_att = st.number_input("Modifier", value=default_values["modifier_att"], key=f"wh_modifier_1_{i}", min_value=0)
+            modifier_att = st.number_input("Modifier", value=default_values["modifier_att"], key=f"wh_modifier_1_{k}", min_value=0)
 
         start_distr = get_dicesum(num_dice_att, modifier_att, dice_size_att)
 
@@ -159,11 +161,11 @@ for i in range(st.session_state.wh_number_of_weapons):
 
         _,colllll1,_, colllll2,_, colllll3,_ = main_col_2.columns([0.25,1,0.125,0.75,0.125,1,0.25])
         with colllll1:
-            num_dice_dmg = st.number_input("Dice", min_value=0, value=default_values["num_dice_dmg"], key=f"wh_num_dice_2_{i}")
+            num_dice_dmg = st.number_input("Dice", min_value=0, value=default_values["num_dice_dmg"], key=f"wh_num_dice_2_{k}")
         with colllll2:
-            dice_size_dmg = int(st.radio("_2", ["W"+str(number) for number in Options.DICE_SIZES_WND], key=f"wh_dice_size_2_{i}",index=default_values["dice_size_dmg"], label_visibility = "hidden")[1:])
+            dice_size_dmg = int(st.radio("_2", ["W"+str(number) for number in Options.DICE_SIZES_WND], key=f"wh_dice_size_2_{k}",index=default_values["dice_size_dmg"], label_visibility = "hidden")[1:])
         with colllll3:
-            modifier_dmg = st.number_input("Modifier", value=default_values["modifier_dmg"], key=f"wh_modifier_2_{i}", min_value=0)
+            modifier_dmg = st.number_input("Modifier", value=default_values["modifier_dmg"], key=f"wh_modifier_2_{k}", min_value=0)
             
         damage_distr = get_dicesum(num_dice_dmg, modifier_dmg, dice_size_dmg)
 
@@ -173,15 +175,15 @@ for i in range(st.session_state.wh_number_of_weapons):
             co1, co2, co4 = st.columns(3)
         
         with co1:
-            dice_threshhold_1 = st.number_input("Hitting on",2,6,key=f"wh_hitting_on_{i}", value=default_values["dice_threshhold_1"])
+            dice_threshhold_1 = st.number_input("Hitting on",2,6,key=f"wh_hitting_on_{k}", value=default_values["dice_threshhold_1"])
         
         if fight_troop:
             with co2:
-                strength = st.number_input("Strength",1,50, value=default_values["strength"], key=f"wh_wounding_on_{i}")
+                strength = st.number_input("Strength",1,50, value=default_values["strength"], key=f"wh_wounding_on_{k}")
             with co3:
-                modifier = st.number_input("Modifier to wound", -5,5,value = default_values["modifier"], key = f"modifier_{i}")
+                modifier = st.number_input("Modifier to wound", -5,5,value = default_values["modifier"], key = f"modifier_{k}")
             with co4:
-                ap = st.number_input("AP",0,6,value = default_values["ap"], key=f"ap_{i}")
+                ap = st.number_input("AP",0,6,value = default_values["ap"], key=f"ap_{k}")
                 dice_threshhold_3 = min([troops_save + ap, 6])
                 if invul_melee:
                     if weapon_kind == "Melee": # melee
@@ -190,12 +192,12 @@ for i in range(st.session_state.wh_number_of_weapons):
                         dice_threshhold_3 = min([dice_threshhold_3, invul_ranged])
         else:
             with co2:
-                dice_threshhold_2 = st.number_input("Wounding on",2,6, value=default_values["dice_threshhold_2"], key=f"wh_wounding_on_{i}")
+                dice_threshhold_2 = st.number_input("Wounding on",2,6, value=default_values["dice_threshhold_2"], key=f"wh_wounding_on_{k}")
             strength = default_values["strength"]
             modifier = default_values["modifier"]
             ap = default_values["ap"]
             with co4:
-                dice_threshhold_3 = st.number_input("Saving on",2,7, value=default_values["dice_threshhold_3"], key=f"wh_saving_on_{i}")
+                dice_threshhold_3 = st.number_input("Saving on",2,7, value=default_values["dice_threshhold_3"], key=f"wh_saving_on_{k}")
         
         if fight_troop:
             col1,col2,col3,col4,col5,col6,col7,col8,col9 = st.columns(9)
@@ -203,17 +205,17 @@ for i in range(st.session_state.wh_number_of_weapons):
             col1,col2,col3,col4,col5,col6,col7 = st.columns(7)
         dev_wounds_overspill = False
         
-        reroll = col1.checkbox("Rerolls", key=f"wh_rerolls_{i}", value = default_values["reroll"])
+        reroll = col1.checkbox("Rerolls", key=f"wh_rerolls_{k}", value = default_values["reroll"])
         if reroll:
-            rerolls_hit = col1.selectbox("Hit Roll",Options.REROLL_OPTIONS , key=f"wh_hit_roll_{i}", index=default_values["reroll_hit"])
-            rerolls_wound = col1.selectbox("Wound Roll", Options.REROLL_OPTIONS, key=f"wh_wound_roll_{i}", index = default_values["reroll_wound"])
+            rerolls_hit = col1.selectbox("Hit Roll",Options.REROLL_OPTIONS , key=f"wh_hit_roll_{k}", index=default_values["reroll_hit"])
+            rerolls_wound = col1.selectbox("Wound Roll", Options.REROLL_OPTIONS, key=f"wh_wound_roll_{k}", index = default_values["reroll_wound"])
         else: # default values for saving
             rerolls_hit = "No reroll"
             rerolls_wound = "No reroll"
         
-        sustained_hits = col2.checkbox("Sustained hits", key=f"wh_sustained_hits_{i}", value = default_values["sustained_hits"])
+        sustained_hits = col2.checkbox("Sustained hits", key=f"wh_sustained_hits_{k}", value = default_values["sustained_hits"])
         if sustained_hits:
-            sus_key = f"wh_sustained_hits_nr_{i}"
+            sus_key = f"wh_sustained_hits_nr_{k}"
             st.markdown(
                 f"""
                 <style>
@@ -228,19 +230,19 @@ for i in range(st.session_state.wh_number_of_weapons):
         else:
             sustained_hits_nr = 0
         
-        lethal_hits = col3.checkbox("Lethal Hits", key=f"wh_lethal_hits_{i}", value = default_values["lethal_hits"])
-        dev_wounds = col4.checkbox("Dev Wounds", key=f"wh_dev_wounds_{i}", value = default_values["dev_wounds"])
-        torrent = col5.checkbox("Torrent", key=f"wh_torrent_{i}", value = default_values["torrent"])
-        crit_modifier= col6.checkbox("Crit Modifier", key=f"wh_modify_crit_{i}", value = default_values["crit_modifier"])        
-        fnp_checkbox =  col7.checkbox("Feel No Pain", key=f"wh_feel_no_pain_{i}", value = default_values["feel_no_pain_setting"])
+        lethal_hits = col3.checkbox("Lethal Hits", key=f"wh_lethal_hits_{k}", value = default_values["lethal_hits"])
+        dev_wounds = col4.checkbox("Dev Wounds", key=f"wh_dev_wounds_{k}", value = default_values["dev_wounds"])
+        torrent = col5.checkbox("Torrent", key=f"wh_torrent_{k}", value = default_values["torrent"])
+        crit_modifier= col6.checkbox("Crit Modifier", key=f"wh_modify_crit_{k}", value = default_values["crit_modifier"])        
+        fnp_checkbox =  col7.checkbox("Feel No Pain", key=f"wh_feel_no_pain_{k}", value = default_values["feel_no_pain_setting"])
         
         if dev_wounds:
-            dev_wounds_overspill = col4.checkbox("Overspill", key=f"wh_dev_wounds_overspill_{i}", value = default_values["dev_wounds_overspill"])
+            dev_wounds_overspill = col4.checkbox("Overspill", key=f"wh_dev_wounds_overspill_{k}", value = default_values["dev_wounds_overspill"])
         if torrent: # the combination doesnt make sense and only screws up the plots
             lethal_hits = False
         if fnp_checkbox:
-            feel_no_pain = col7.number_input("Normal FnP",2,7,value=default_values["feel_no_pain"],label_visibility="collapsed", key=f"wh_normal_fnp_{i}")
-            fnp_checkbox_mortals = col7.checkbox("Different FnP on Mortals", key=f"wh_weird_stuff_{i}", value = default_values["fnp_checkbox_mortals"])
+            feel_no_pain = col7.number_input("Normal FnP",2,7,value=default_values["feel_no_pain"],label_visibility="collapsed", key=f"wh_normal_fnp_{k}")
+            fnp_checkbox_mortals = col7.checkbox("Different FnP on Mortals", key=f"wh_weird_stuff_{k}", value = default_values["fnp_checkbox_mortals"])
             if fnp_checkbox_mortals:
                 feel_no_pain_2 = col7.number_input("DevWounds FnP",2,7,value=default_values["feel_no_pain_2"],label_visibility="collapsed")
             else:
@@ -251,11 +253,11 @@ for i in range(st.session_state.wh_number_of_weapons):
             fnp_checkbox_mortals = False
 
         if fight_troop:
-            if col8.checkbox("No saving throw", value = default_values["dice_threshhold_3"] == 7,key=f"wh_no_sv_throw_{i}"):
+            if col8.checkbox("No saving throw", value = default_values["dice_threshhold_3"] == 7,key=f"wh_no_sv_throw_{k}"):
                 dice_threshhold_3 = 7
-            if col9.checkbox("Fixed value to hit", value = default_values["fixed_hit_thresh"] > 0, key = f"wh_fixed_value_{i}"):
+            if col9.checkbox("Fixed value to hit", value = default_values["fixed_hit_thresh"] > 0, key = f"wh_fixed_value_{k}"):
                 fix_hit_def_value = default_values["fixed_hit_thresh"] if default_values["fixed_hit_thresh"] else 4
-                fix_hit = col9.number_input("Test",2,6, value = fix_hit_def_value, key = f"wh_fixed_value_nr_input_{i}")
+                fix_hit = col9.number_input("Test",2,6, value = fix_hit_def_value, key = f"wh_fixed_value_nr_input_{k}")
             else:
                 fix_hit = 0                
             dice_threshhold_2 = get_wound_threshhold(strength,toughness,modifier, fix_hit)
@@ -263,8 +265,12 @@ for i in range(st.session_state.wh_number_of_weapons):
             fix_hit = 0
 
         if crit_modifier:
-            hit_roll_crit = col6.number_input("Hit roll critting on",dice_threshhold_1,6,value=default_values["hit_roll_crit"], key=f"wh_hit_roll_crit_{i}")
-            wound_roll_crit = col6.number_input("Wound roll critting on", dice_threshhold_2,6, value=default_values["wound_roll_crit"], key=f"wh_wound_roll_crit_{i}")
+            hit_roll_crit = col6.number_input("Hit roll critting on",2,6,value=default_values["hit_roll_crit"], key=f"wh_hit_roll_crit_{k}")
+            if hit_roll_crit<dice_threshhold_1:
+                dice_threshhold_1 = hit_roll_crit
+            wound_roll_crit = col6.number_input("Wound roll critting on", 2,6, value=default_values["wound_roll_crit"], key=f"wh_wound_roll_crit_{k}")
+            if wound_roll_crit<dice_threshhold_2:
+                dice_threshhold_2 = wound_roll_crit
         else:
             hit_roll_crit=6
             wound_roll_crit=6
@@ -303,8 +309,9 @@ for i in range(st.session_state.wh_number_of_weapons):
             "feel_no_pain_2": feel_no_pain_2,
             "fixed_hit_thresh" : fix_hit
         }
+        
         # move the button 10 pixel down
-        button_key = f"wh_save_button_{i}"
+        button_key = f"wh_save_button_{k}"
         col_save.markdown(
             f"""
             <style>
@@ -350,8 +357,11 @@ for i in range(st.session_state.wh_number_of_weapons):
                 """,
                 unsafe_allow_html=True,
             )
-    right.button("", icon = ":material/arrow_drop_up:", key= f"weapon_move_up_{i}", disabled = i == 0, on_click = swap_weapons, args = [all_settings,i,i-1])
-    right.button("", icon = ":material/arrow_drop_down:", key= f"weapon_move_down_{i}",disabled = i == st.session_state.wh_number_of_weapons -1, on_click = swap_weapons, args = [all_settings,i,i+1])
+    if right.button("", icon = ":material/arrow_drop_up:", key= f"weapon_move_up_{i}", disabled = i == 0, on_click = swap_weapons, args = [all_settings,i,i-1]):
+        st.rerun()
+
+    if right.button("", icon = ":material/arrow_drop_down:", key= f"weapon_move_down_{i}",disabled = i == st.session_state.wh_number_of_weapons -1, on_click = swap_weapons, args = [all_settings,i,i+1]):
+        st.rerun()
     
 
 

@@ -6,10 +6,9 @@ import pandas as pd
 import base64
 
 from tools.wh.plot_tools import *
-from tools.wh.roll_tools import *
+from tools.general.roll_tools import *
 from tools.wh.complete_roll import *
-from tools.wh.tools import *
-from tools.setup import setup_40k
+from tools.wh.gen import *
 
 
 

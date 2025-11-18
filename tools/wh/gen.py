@@ -30,8 +30,29 @@ class Options:
     REROLL_OPTIONS = ["No reroll", "Reroll 1s", "Reroll all", "Fish for crits", "Fish for hits"]
     WEAPON_OPTIONS = ["Melee", "Ranged"]
 
+def setup_40k():
+    st.set_page_config(
+        layout="wide", 
+        page_title = "40K",
+        page_icon = ":space_invader:"
+    )
+
+    st.session_state.wh_number_of_weapons = 1
+    st.session_state.wh_current_settings = [Default_weapon.default_wh_weapon]
+    st.session_state.wh_troops = 0
+    st.session_state.wh_default_weapon_values = [None]
+    st.session_state.wh_saved_weapons = {}
+    st.session_state.wh_enabled_weapons = [True]
+    st.session_state.wh_names_of_weapons = ["Weapon Nr. 1"]
+    st.session_state.wh_current_names_of_weapons = st.session_state.wh_names_of_weapons.copy()
+    st.session_state.wh_current_settings_wo_calc = st.session_state.wh_current_settings.copy()
+    st.session_state.wh_expanders = [False]
+    st.session_state.wh_expander_tracker = [0]
+    st.session_state.wh_total_weapons = 1
+
 def add_weapon(name):
     st.session_state.wh_number_of_weapons +=1
+    st.session_state.wh_total_weapons +=1
     if name == "default":
         st.session_state.wh_names_of_weapons.append(f"Weapon Nr. {st.session_state.wh_number_of_weapons}")
         st.session_state.wh_default_weapon_values.append(None)
@@ -40,6 +61,8 @@ def add_weapon(name):
         st.session_state.wh_names_of_weapons.append(name)
         st.session_state.wh_default_weapon_values.append(st.session_state.wh_saved_weapons[name])
         st.session_state.wh_current_settings_wo_calc.append(st.session_state.wh_saved_weapons[name])
+    st.session_state.wh_expanders.append(False)
+    st.session_state.wh_expander_tracker.append(st.session_state.wh_total_weapons)
 
 def remove_weapon():
     if st.session_state.wh_number_of_weapons >1:
@@ -47,6 +70,8 @@ def remove_weapon():
         st.session_state.wh_names_of_weapons.pop()
         st.session_state.wh_default_weapon_values.pop()
         st.session_state.wh_current_settings_wo_calc.pop()
+        st.session_state.wh_expanders.pop()
+        st.session_state.wh_expander_tracker.pop()
 
 def save_weapon(name, settings):
     st.session_state.wh_saved_weapons[name] = settings
@@ -58,4 +83,10 @@ def swap_weapons(settings,old_index, new_index):
     )
     st.session_state.wh_names_of_weapons[old_index], st.session_state.wh_names_of_weapons[new_index] = (
         st.session_state.wh_names_of_weapons[new_index], st.session_state.wh_names_of_weapons[old_index]
+    )
+    st.session_state.wh_expanders[old_index], st.session_state.wh_expanders[new_index] = (
+        st.session_state.wh_expanders[new_index], st.session_state.wh_expanders[old_index]
+    )
+    st.session_state.wh_expander_tracker[old_index], st.session_state.wh_expander_tracker[new_index] = (
+        st.session_state.wh_expander_tracker[new_index], st.session_state.wh_expander_tracker[old_index]
     )

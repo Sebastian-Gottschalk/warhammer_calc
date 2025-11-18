@@ -114,7 +114,7 @@ def get_threshhold_plot(dice_roll, threshhold = 0.999, multi_list = False):
         return [dice_result[:max_index] for dice_result in dice_roll]
     
 def show_kroot_1():
-    side_bg = "img/kroot.png"
+    side_bg = "img/wh/kroot.png"
     side_bg_ext = "png"
     with open(side_bg, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
@@ -133,7 +133,7 @@ def show_kroot_1():
     )
 
 def show_kroot_2():
-    side_bg = "img/kroot_2.png"
+    side_bg = "img/wh/kroot_2.png"
     side_bg_ext = "png"
     with open(side_bg, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()

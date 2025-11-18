@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 from scipy.stats import  multinomial, binom
 import pandas as pd
-from tools.wh.tools import Options
+from tools.wh.gen import Options
 
 
 @st.cache_data

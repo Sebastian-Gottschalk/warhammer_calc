@@ -1,7 +1,7 @@
 import streamlit as st
-from tools.wh.roll_tools import *
+from tools.general.roll_tools import *
 from tools.wh.plot_tools import *
-from tools.wh.tools import Default_weapon, Options
+from tools.wh.gen import Default_weapon, Options
 from scipy.stats import  multinomial, binom
 import pandas as pd
 
