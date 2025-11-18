@@ -90,3 +90,12 @@ def swap_weapons(settings,old_index, new_index):
     st.session_state.wh_expander_tracker[old_index], st.session_state.wh_expander_tracker[new_index] = (
         st.session_state.wh_expander_tracker[new_index], st.session_state.wh_expander_tracker[old_index]
     )
+
+def delete_current_weapon(settings,idx):
+    settings.pop(idx)
+    st.session_state.wh_number_of_weapons -=1
+    st.session_state.wh_names_of_weapons.pop(idx)
+    st.session_state.wh_default_weapon_values.pop(idx)
+    st.session_state.wh_current_settings_wo_calc.pop(idx)
+    st.session_state.wh_expanders.pop(idx)
+    st.session_state.wh_expander_tracker.pop(idx)

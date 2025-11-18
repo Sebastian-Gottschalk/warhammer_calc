@@ -83,6 +83,7 @@ all_settings = []
 all_enabled = []
 
 all_right_columns = []
+all_delete_columns = []
 # Setting up the Interface to have the user select stats while saving them in variables
 for i in range(st.session_state.wh_number_of_weapons):
     # read the currently saved value from the session state
@@ -132,7 +133,8 @@ for i in range(st.session_state.wh_number_of_weapons):
     # Building the Options for the user to choose and saving the resulting weapon in a variable
     with middle.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}", expanded = st.session_state.wh_expanders[i]):
         st.session_state.wh_expanders[i] = True
-        left,middle, col_save = st.columns([7,1,1])
+        left,middle, col_save,col_del,_ = st.columns([21,3,3,1,1])
+        all_delete_columns.append(col_del)
         name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key=f"wh_enter_name_{k}")
         weapon_kind = middle.selectbox(" ",Options.WEAPON_OPTIONS, index = default_values["weapon_kind"],key = f"wh_weapon_kind_{k}")
         if name != st.session_state.wh_names_of_weapons[i]:
@@ -323,12 +325,12 @@ for i in range(st.session_state.wh_number_of_weapons):
             unsafe_allow_html=True,
         )
         col_save.button("Save Weapon", on_click = save_weapon, args = [name, save_weapon_settings], key=button_key)
-    
+        
     # saving the weapon options and the fact if they are selected or not
     all_settings.append(save_weapon_settings)
     all_enabled.append(enabled)
 
-# Creating the Swap weapons menu
+# Creating the Swap weapons menu and the Delete buttons
 for i in range(st.session_state.wh_number_of_weapons):
     right = all_right_columns[i]
     # moving the up arrow 18px down
@@ -357,11 +359,29 @@ for i in range(st.session_state.wh_number_of_weapons):
                 """,
                 unsafe_allow_html=True,
             )
+
     if right.button("", icon = ":material/arrow_drop_up:", key= f"weapon_move_up_{i}", disabled = i == 0, on_click = swap_weapons, args = [all_settings,i,i-1]):
         st.rerun()
 
     if right.button("", icon = ":material/arrow_drop_down:", key= f"weapon_move_down_{i}",disabled = i == st.session_state.wh_number_of_weapons -1, on_click = swap_weapons, args = [all_settings,i,i+1]):
         st.rerun()
+
+    # move the button 10 pixel down
+    col_del = all_delete_columns[i]
+    button_key = f"delete_weapon_{i}"
+    col_del.markdown(
+        f"""
+        <style>
+        div.st-key-{button_key} {{
+            margin-top: 10px !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    if col_del.button(" ", icon = ":material/delete:", key = button_key, on_click = delete_current_weapon, args = [all_settings,i], disabled = st.session_state.wh_number_of_weapons == 1):
+        st.rerun()
+
     
 
 
@@ -398,7 +418,7 @@ if any(st.session_state.wh_enabled_weapons):
                 new_troops = complete_roll(
                 current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j], plot_sep, plot_sum
                 )
-                if len(st.session_state.wh_current_troops) < sum(st.session_state.wh_enabled_weapons):#len(st.session_state.wh_current_settings):
+                if len(st.session_state.wh_current_troops) < sum(st.session_state.wh_enabled_weapons):
                     st.session_state.wh_current_troops.append(new_troops)
             else:        
                 complete_roll(
