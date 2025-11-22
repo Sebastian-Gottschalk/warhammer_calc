@@ -274,8 +274,8 @@ for i in range(st.session_state.wh_number_of_weapons):
             if wound_roll_crit<dice_threshhold_2:
                 dice_threshhold_2 = wound_roll_crit
         else:
-            hit_roll_crit=6
-            wound_roll_crit=6
+            hit_roll_crit=7
+            wound_roll_crit=7
 
         save_weapon_settings = {
             "weapon_kind" : Options.WEAPON_OPTIONS.index(weapon_kind),

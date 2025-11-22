@@ -197,7 +197,7 @@ eg
 def shoot_on_troop(save_roll_hits, damage_distr, troop, feel_no_pain, mortal_wounds):
     wounds = troop.shape[0]-1
     nr_units = troop.shape[1]
-    if feel_no_pain:
+    if feel_no_pain: # if feel_no_pain < 7 
         # adjust damage_distr to include FnP
         damage_fnp = [0]*len(damage_distr)
         prob_fnp = (feel_no_pain-1)/6 # probability that the feel no pain roll misses
