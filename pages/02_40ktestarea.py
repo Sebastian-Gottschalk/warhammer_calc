@@ -167,7 +167,7 @@ for i in range(st.session_state.wh_number_of_weapons):
         with colllll2:
             dice_size_dmg = int(st.radio("_2", ["W"+str(number) for number in Options.DICE_SIZES_WND], key=f"wh_dice_size_2_{k}",index=default_values["dice_size_dmg"], label_visibility = "hidden")[1:])
         with colllll3:
-            modifier_dmg = st.number_input("Modifier", value=default_values["modifier_dmg"], key=f"wh_modifier_2_{k}", min_value=0)
+            modifier_dmg = st.number_input("Modifier", value=default_values["modifier_dmg"], key=f"wh_modifier_2_{k}")
             
         damage_distr = get_dicesum(num_dice_dmg, modifier_dmg, dice_size_dmg)
 
@@ -257,9 +257,9 @@ for i in range(st.session_state.wh_number_of_weapons):
         if fight_troop:
             if col8.checkbox("No saving throw", value = default_values["dice_threshhold_3"] == 7,key=f"wh_no_sv_throw_{k}"):
                 dice_threshhold_3 = 7
-            if col9.checkbox("Fixed value to hit", value = default_values["fixed_hit_thresh"] > 0, key = f"wh_fixed_value_{k}"):
+            if col9.checkbox("Fixed value to wound", value = default_values["fixed_hit_thresh"] > 0, key = f"wh_fixed_value_{k}"):
                 fix_hit_def_value = default_values["fixed_hit_thresh"] if default_values["fixed_hit_thresh"] else 4
-                fix_hit = col9.number_input("Test",2,6, value = fix_hit_def_value, key = f"wh_fixed_value_nr_input_{k}")
+                fix_hit = col9.number_input("",2,6, value = fix_hit_def_value, key = f"wh_fixed_value_nr_input_{k}")
             else:
                 fix_hit = 0                
             dice_threshhold_2 = get_wound_threshhold(strength,toughness,modifier, fix_hit)

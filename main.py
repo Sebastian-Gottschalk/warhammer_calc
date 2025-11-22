@@ -7,6 +7,7 @@ st.set_page_config(
 )
 
 st.write("Welcome to the multipage streamlit app. Theres nothing on this page yet.")
+st.write("The most updated version is in the testarea. In case of issues when switching between the testarea and other pages reload the page.")
 st.write("Other pages:")
 
 other_pages = [f for f in os.listdir("pages") if f.endswith('.py')]

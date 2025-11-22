@@ -144,6 +144,8 @@ def get_dicesum(nr_dice, bias, dice_size):
     from 1 to dice_size and adds bias to the result
     '''
     if nr_dice:
+        if nr_dice * dice_size + bias <= 0: # in case of something like 1D3 - 5 DMG just automatically a 100% chance of no 0 dmg
+            return [1]
         single_die = np.ones(dice_size) / dice_size
         distr = single_die
         for _ in range(nr_dice-1):
@@ -151,7 +153,7 @@ def get_dicesum(nr_dice, bias, dice_size):
         possible_sum = np.arange(nr_dice + bias, dice_size*nr_dice+bias+1)
         resulting_distr = [0]*(dice_size*nr_dice+bias+1)
         for i in possible_sum:
-            resulting_distr[i] = distr[i-min(possible_sum)]
+            resulting_distr[max(i,0)] += distr[i-min(possible_sum)] # in case of possible negative dmg turn it to 0
         return resulting_distr
     else: # in case nr_dice = 0
         return [0]*bias+[1]

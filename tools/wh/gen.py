@@ -27,7 +27,7 @@ class Options:
     '''
     DICE_SIZES_ATT = [3,6]
     DICE_SIZES_WND = [3,6]
-    REROLL_OPTIONS = ["No reroll", "Reroll 1s", "Reroll all", "Fish for crits", "Fish for hits"]
+    REROLL_OPTIONS = ["No reroll", "Reroll 1s", "Reroll all", "Fish for crits"] #, "Fish for hits"]
     WEAPON_OPTIONS = ["Melee", "Ranged"]
 
 def setup_40k():

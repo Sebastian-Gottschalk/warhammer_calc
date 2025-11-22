@@ -2,6 +2,9 @@ import streamlit as st
 import os
 from tools.kt.gen import *
 
+# blocking the user from access lol
+st.switch_page(f"pages/02_40ktestarea.py")
+
 
 
 '''
@@ -35,8 +38,6 @@ st.set_page_config(
 
 if st.checkbox("Debug Session state"):
     st.session_state
-
-
 all_settings = []
 all_enabled = []
 
@@ -103,7 +104,7 @@ for i in range(st.session_state.kt_number_of_weapons):
         _,col_title_1,_ = main_col_1.columns([0.25,1,0.25])
         with col_title_1:
             st.title("Attack Dice")
-            num_dice_att = st.number_input("Nr. of Dice", min_value = 1, value = )
+            num_dice_att = st.number_input("Nr. of Dice", min_value = 1, value = 1)
 
         _,coll1,_, coll2,_, coll3,_ = main_col_1.columns([0.25,1,0.125,0.75,0.125,1,0.25])
         with coll1:

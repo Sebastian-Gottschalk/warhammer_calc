@@ -22,7 +22,7 @@ def complete_roll(
     # the variable reroll_hit will be created and set to "Reroll 1s"
     keys = list(Default_weapon.default_wh_weapon.keys())
     for key in keys:
-        globals()[key] = settings.get(key)
+        globals()[key] = settings.get(key,Default_weapon.default_wh_weapon[key])
             
     reroll_ones_wound = Options.REROLL_OPTIONS[reroll_wound] == "Reroll 1s"
     reroll_all_wound = reroll_wound == "Reroll all"
