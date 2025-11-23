@@ -151,13 +151,20 @@ for i in range(st.session_state.wh_number_of_weapons):
     # Building the Options for the user to choose and saving the resulting weapon in a variable
     with middle.expander(f"{i+1} - {st.session_state.wh_names_of_weapons[i]}", expanded = st.session_state.wh_expanders[i]):
         if fight_troop:
-            co1,co2,co3 = st.columns([1,1,1])
-            faction = co1.selectbox("Faction", [""] + files.get_faction_names(), index = 0, key = "faction_sel_{k}")
-            model_name = co2.selectbox("Model", [""] + files.get_faction_member(faction), index = 0, key = "model_sel_{k}")
+            co1,co2,co3,co4 = st.columns([1,4,4,1])
+            faction = co1.selectbox("Faction", [""] + files.get_faction_names(), index = 0, key = f"faction_sel_{k}")
+            model_name = co2.selectbox("Model", [""] + files.get_faction_member(faction), index = 0, key = f"model_sel_{k}")
             if model_name:
-                weapon_name = co3.selectbox("Weapon",[""] + files.get_weapon_options(model_name), index = 0, key = "weapon_sel_{k}")
+                weapon_name = co3.selectbox("Weapon",[""] + files.get_weapon_options(model_name), index = 0, key = f"weapon_sel_{k}")
                 if weapon_name:
-                    weapon_stats = files.get_offensive_stats(model_name, weapon_name)
+                    model_amount = co4.selectbox("\# of Models", files.get_model_count(files.get_id(model_name)), accept_new_options = True, key = f"model_amount_sel_{k}")
+                    if isinstance(model_amount,str):
+                        if model_amount.isnumeric():
+                            model_amount = int(model_amount)
+                        else:
+                            st.warning("Enter only numbers")
+                            model_amount = 1 #defaulting to 1
+                    weapon_stats = files.get_offensive_stats(model_name, weapon_name, model_amount)
                     for key, val in weapon_stats.items():
                         default_values[key] = val
                     if st.session_state.wh_names_of_weapons[i] != weapon_name:

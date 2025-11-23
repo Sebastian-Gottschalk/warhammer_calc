@@ -44,19 +44,17 @@ class csv_files():
         self.unit_cost = read_data("Datasheets_models_cost")
 
     def get_defensive_stats(self,name):
-        id = self.sheets[self.sheets.name == name].iloc[0]["id"]
+        id = self.get_id(name)
         current_model = self.models[self.models.datasheet_id == id].iloc[0]
         toughness = current_model["T"]
         save = int(current_model["Sv"][0])
         inv_save = 7 if current_model["inv_sv"] == "-" else int(current_model["inv_sv"])
-        model_count = self.unit_cost[self.unit_cost["datasheet_id"] == id]["description"].apply(lambda x: sum([int(nr) for nr in x.split(" ") if nr.isnumeric()])).values.tolist()
-        if model_count == [0]:
-            model_count = [1]
         wounds = current_model["W"]
+        model_count = self.get_model_count(id)
         return toughness, save, inv_save, model_count, wounds
     
-    def get_offensive_stats(self,name, weapon_name):
-        id = self.sheets[self.sheets.name == name].iloc[0]["id"]
+    def get_offensive_stats(self,name, weapon_name, model_amount):
+        id = self.get_id(name)
         weapon = self.wargear[(self.wargear.datasheet_id == id) & (self.wargear.name == weapon_name)].iloc[0]
         attack_profile = weapon["A"]
         num_dice_att, dice_size_att, modifier_att = read_profile(attack_profile)
@@ -74,17 +72,27 @@ class csv_files():
             strength = 6
         ap = -weapon["AP"]
         offensive_stats = {
-            "num_dice_att":num_dice_att,
+            "num_dice_att":num_dice_att * model_amount,
             "dice_size_att":Options.DICE_SIZES_ATT.index(dice_size_att),
-            "modifier_att":modifier_att,
-            "num_dice_dmg":num_dice_dmg,
+            "modifier_att":modifier_att * model_amount,
+            "num_dice_dmg":num_dice_dmg * model_amount,
             "dice_size_dmg":Options.DICE_SIZES_WND.index(dice_size_dmg),
-            "modifier_dmg":modifier_dmg,
+            "modifier_dmg":modifier_dmg * model_amount,
             "dice_threshhold_1":dice_threshhold_1,
             "strength" : strength,
             "ap" : ap
         }
         return offensive_stats
+    
+    def get_id(self,name):
+        id = self.sheets[self.sheets.name == name].iloc[0]["id"]
+        return id
+    
+    def get_model_count(self, id):
+        model_count = self.unit_cost[self.unit_cost["datasheet_id"] == id]["description"].apply(lambda x: sum([int(nr) for nr in x.split(" ") if nr.isnumeric()])).values.tolist()
+        if model_count == [0]:
+            model_count = [1]
+        return model_count
             
     def get_weapon_options(self, name):
         id = self.sheets[self.sheets.name == name].iloc[0]["id"]
