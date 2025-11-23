@@ -14,16 +14,15 @@ from wahapedia.db_interaction.interact import csv_files
 
 
 
-# Loading the CSV files
-files = csv_files()
-
-
 ### STREAMLIT INTERFACE
 
 # setup
 if "setup_40k" not in st.session_state:
     setup_40k()
     st.session_state.setup_40k = True
+
+
+files = st.session_state.wh_files
 
 
 # Buttons to add / remove weapons
@@ -36,7 +35,7 @@ middle.write(f"Current Nr of weapons: {st.session_state.wh_number_of_weapons}")
 # setting up the sidebar options
 with st.sidebar:
 
-    fight_troop = st.checkbox("Shoot on dudes")
+    fight_troop = st.checkbox("Shoot on dudes", value = True)
     troops = 0
     
     # Setting up the options to choose for troop size / wounds per model / ...

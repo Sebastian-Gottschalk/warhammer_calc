@@ -1,6 +1,5 @@
 import streamlit as st
 
-
 class Default_weapon:
     '''
     Class for the Default Weapon Options to use when creating a default weapon
@@ -31,6 +30,8 @@ class Options:
     WEAPON_OPTIONS = ["Melee", "Ranged"]
 
 def setup_40k():
+    from wahapedia.db_interaction.interact import csv_files
+    
     st.set_page_config(
         layout="wide", 
         page_title = "40K",
@@ -49,6 +50,7 @@ def setup_40k():
     st.session_state.wh_expanders = [False]
     st.session_state.wh_expander_tracker = [0]
     st.session_state.wh_total_weapons = 1
+    st.session_state.wh_files = csv_files()
 
 def add_weapon(name):
     st.session_state.wh_number_of_weapons +=1
