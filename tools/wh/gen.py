@@ -114,3 +114,4 @@ def update_button_session_state(default_values,k):
     st.session_state[f"wh_wounding_on_{k}"] = default_values["strength"]
     st.session_state[f"wh_modifier_{k}"] = default_values["modifier"]
     st.session_state[f"wh_ap_{k}"] = default_values["ap"]
+    st.session_state[f"wh_ap_{k}"] = default_values["ap"]

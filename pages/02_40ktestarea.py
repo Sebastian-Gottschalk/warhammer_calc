@@ -158,15 +158,15 @@ for i in range(st.session_state.wh_number_of_weapons):
         st.session_state.wh_expanders[i] = True
         left,middle, col_save,col_del,_ = st.columns([21,3,3,1,1])
         all_delete_columns.append(col_del)
-        name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key=f"wh_enter_name_{k}")
+        # name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key=f"wh_enter_name_{k}")
         weapon_kind = middle.selectbox(" ",Options.WEAPON_OPTIONS, index = default_values["weapon_kind"],key = f"wh_weapon_kind_{k}")
-        if name != st.session_state.wh_names_of_weapons[i]:
-            st.session_state.wh_names_of_weapons[i] = name
-            st.session_state[f"wh_faction_sel_{k}"] = ""
-            st.session_state[f"wh_model_sel_{k}"] = ""
-            st.session_state[f"wh_weapon_sel_{k}"] = ""
-            st.session_state[f"wh_model_amount_sel_{k}"] = ""
-            st.rerun()
+        # if name != st.session_state.wh_names_of_weapons[i]:
+        #     st.session_state.wh_names_of_weapons[i] = name
+        #     st.session_state[f"wh_faction_sel_{k}"] = ""
+        #     st.session_state[f"wh_model_sel_{k}"] = ""
+        #     st.session_state[f"wh_weapon_sel_{k}"] = ""
+        #     st.session_state[f"wh_model_amount_sel_{k}"] = ""
+        #     st.rerun()
 
         if fight_troop:
             faction = co1.selectbox("Faction", [""] + files.get_faction_names(), index = 0, key = f"wh_faction_sel_{k}")
