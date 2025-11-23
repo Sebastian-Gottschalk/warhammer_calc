@@ -24,6 +24,8 @@ class csv_files():
         save = int(current_model["Sv"][0])
         inv_save = 7 if current_model["inv_sv"] == "-" else int(current_model["inv_sv"])
         model_count = self.unit_cost[self.unit_cost["datasheet_id"] == id]["description"].apply(lambda x: sum([int(nr) for nr in x.split(" ") if nr.isnumeric()])).values.tolist()
+        if model_count == [0]:
+            model_count = [1]
         wounds = current_model["W"]
         return toughness, save, inv_save, model_count, wounds
     
