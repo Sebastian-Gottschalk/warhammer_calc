@@ -8,7 +8,7 @@ import pandas as pd
 
 @st.cache_data
 def complete_roll(
-        settings, plot_results, show_distr, troops, plot_sep, plot_sum, invert_density = False
+        settings, plot_results, show_distr, troops, plot_sep, plot_sum, invert_density
         ):
     
     # Hashing of streamlit: sometimes gives settings as a list with the dict inside instead of just the dict
