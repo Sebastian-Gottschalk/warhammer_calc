@@ -10,8 +10,12 @@ from tools.general.roll_tools import *
 from tools.wh.complete_roll import *
 from tools.wh.gen import *
 
+from wahapedia.db_interaction.interact import csv_files
 
 
+
+# Loading the CSV files
+files = csv_files()
 
 
 ### STREAMLIT INTERFACE
@@ -37,23 +41,36 @@ with st.sidebar:
     
     # Setting up the options to choose for troop size / wounds per model / ...
     if fight_troop:
-        co1, co2, co3, co4 = st.columns(4)
-        with co1:
-            amount_of_troops = st.number_input("Units",1,100,value=10)
-        with co2:
-            wounds_per_troop = st.number_input("Wounds",1,20,value=2)
-        with co3:
-            toughness = st.number_input("Toughness",1,100,value=6)
-        with co4:
-            troops_save = st.number_input("Save",2,6,value=4)
+        faction = st.selectbox("Faction", [""] + files.get_faction_names(), index = 0)
+        
+        model_name = st.selectbox("Model", [""] + files.get_faction_member(faction), index = 0)
+
+        if model_name:
+            m_toughness, m_save, m_invul, m_troopsize, m_wounds = files.get_defensive_stats(model_name)
+        else:
+            m_toughness, m_save, m_invul, m_troopsize, m_wounds = 6,4,7,[10],3
+        
+
+        co1, co2, co3, co4 = st.columns([2,1,1,1])
+        amount_of_troops = co1.selectbox("\# of Models", m_troopsize, accept_new_options = True)
+        if isinstance(amount_of_troops, str):
+            if amount_of_troops.isnumeric():
+                amount_of_troops = int(amount_of_troops)
+            else:
+                st.warning("Invalid Input, defaulting to 10 models")
+                amount_of_troops = 10
+        wounds_per_troop = co2.number_input("W",1,20,value=m_wounds)
+        toughness = co3.number_input("T",1,100,value=m_toughness)
+        troops_save = co4.number_input("SV",2,6,value=m_save)
         troops = np.zeros((wounds_per_troop+1,amount_of_troops))
         troops[wounds_per_troop,0] = 1
-        if st.checkbox("Invul save"):
+        if st.checkbox("Invul save", value = m_invul < 7):
+            default_invul = 5 if m_invul == 7 else m_invul
             co1, co2 = st.columns(2)
             with co1:
-                invul_melee = st.number_input("Melee",2,6,value = 5)
+                invul_melee = st.number_input("Melee",2,6,value = m_invul)
             with co2:
-                invul_ranged = st.number_input("Ranged",2,6,value = 5)
+                invul_ranged = st.number_input("Ranged",2,6,value = m_invul)
         else:
             invul_melee = 0
             invul_ranged = 0
