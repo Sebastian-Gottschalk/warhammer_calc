@@ -191,7 +191,8 @@ for i in range(st.session_state.wh_number_of_weapons):
 
         _,coll1,_, coll2,_, coll3,_ = main_col_1.columns([0.25,1,0.125,0.75,0.125,1,0.25])
         with coll1:
-            num_dice_att = st.number_input("Dice", min_value=0, value=default_values["num_dice_att"], key=f"wh_num_dice_1_{k}")
+            st.session_state[f"wh_num_dice_1_{k}"] = default_values["num_dice_att"]
+            num_dice_att = st.number_input("Dice", min_value=0, key=f"wh_num_dice_1_{k}") # value=default_values["num_dice_att"],
         with coll2:
             dice_size_att = int(st.radio("_", ["W"+str(number) for number in Options.DICE_SIZES_ATT], key=f"wh_dice_size_1_{k}", label_visibility = "hidden", index = default_values["dice_size_att"])[1:])
         with coll3:
