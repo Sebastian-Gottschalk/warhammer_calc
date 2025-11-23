@@ -374,7 +374,7 @@ for i in range(st.session_state.wh_number_of_weapons):
             """,
             unsafe_allow_html=True,
         )
-        col_save.button("Save Weapon", on_click = save_weapon, args = [name, save_weapon_settings], key=button_key)
+        col_save.button("Save Weapon", on_click = save_weapon, args = [st.session_state.wh_names_of_weapons[i], save_weapon_settings], key=button_key)
         
     # saving the weapon options and the fact if they are selected or not
     all_settings.append(save_weapon_settings)
