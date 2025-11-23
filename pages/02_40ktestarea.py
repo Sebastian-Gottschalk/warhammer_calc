@@ -187,16 +187,7 @@ for i in range(st.session_state.wh_number_of_weapons):
                     if st.session_state.wh_names_of_weapons[i] != weapon_name or st.session_state.wh_model_amount[i] != model_amount:
                         st.session_state.wh_names_of_weapons[i] = weapon_name
                         st.session_state.wh_model_amount[i] = model_amount
-                        st.session_state[f"wh_num_dice_1_{k}"] = default_values["num_dice_att"]
-                        st.session_state[f"wh_dice_size_1_{k}"] = "W"+str(Options.DICE_SIZES_ATT[default_values["dice_size_att"]])
-                        st.session_state[f"wh_modifier_1_{k}"] = default_values["modifier_att"]
-                        st.session_state[f"wh_dice_size_2_{k}"] = "W" + str(Options.DICE_SIZES_ATT[default_values["dice_size_dmg"]])
-                        st.session_state[f"wh_num_dice_2_{k}"] = default_values["num_dice_dmg"]
-                        st.session_state[f"wh_modifier_2_{k}"] = default_values["modifier_dmg"]
-                        st.session_state[f"wh_hitting_on_{k}"] = default_values["dice_threshhold_1"]
-                        st.session_state[f"wh_wounding_on_{k}"] = default_values["strength"]
-                        st.session_state[f"wh_modifier_{k}"] = default_values["modifier"]
-                        st.session_state[f"wh_ap_{k}"] = default_values["ap"]
+                        update_button_session_state(default_values,k)
                         
                         st.rerun()
 
@@ -208,11 +199,11 @@ for i in range(st.session_state.wh_number_of_weapons):
 
         _,coll1,_, coll2,_, coll3,_ = main_col_1.columns([0.25,1,0.125,0.75,0.125,1,0.25])
         with coll1:
-            num_dice_att = st.number_input("Dice", min_value=0, key=f"wh_num_dice_1_{k}")
+            num_dice_att = st.number_input("Dice", min_value=0, key=f"wh_num_dice_1_{k}", step = 1)
         with coll2:
             dice_size_att = int(st.radio("_", ["W"+str(number) for number in Options.DICE_SIZES_ATT], key=f"wh_dice_size_1_{k}", label_visibility = "hidden")[1:])
         with coll3:
-            modifier_att = st.number_input("Modifier", key=f"wh_modifier_1_{k}", min_value=0)
+            modifier_att = st.number_input("Modifier", key=f"wh_modifier_1_{k}", min_value=0, step = 1)
 
         start_distr = get_dicesum(num_dice_att, modifier_att, dice_size_att)
 
@@ -222,11 +213,11 @@ for i in range(st.session_state.wh_number_of_weapons):
 
         _,colllll1,_, colllll2,_, colllll3,_ = main_col_2.columns([0.25,1,0.125,0.75,0.125,1,0.25])
         with colllll1:
-            num_dice_dmg = st.number_input("Dice", min_value=0, key=f"wh_num_dice_2_{k}")
+            num_dice_dmg = st.number_input("Dice", min_value=0, key=f"wh_num_dice_2_{k}", step = 1)
         with colllll2:
             dice_size_dmg = int(st.radio("_2", ["W"+str(number) for number in Options.DICE_SIZES_WND], key=f"wh_dice_size_2_{k}", label_visibility = "hidden")[1:])
         with colllll3:
-            modifier_dmg = int(st.number_input("Modifier", key=f"wh_modifier_2_{k}"))
+            modifier_dmg = st.number_input("Modifier", key=f"wh_modifier_2_{k}", step = 1)
             
         damage_distr = get_dicesum(num_dice_dmg, modifier_dmg, dice_size_dmg)
 

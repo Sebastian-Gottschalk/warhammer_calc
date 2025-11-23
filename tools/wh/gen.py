@@ -102,3 +102,15 @@ def delete_current_weapon(settings,idx):
     st.session_state.wh_current_settings_wo_calc.pop(idx)
     st.session_state.wh_expanders.pop(idx)
     st.session_state.wh_expander_tracker.pop(idx)
+
+def update_button_session_state(default_values,k):
+    st.session_state[f"wh_num_dice_1_{k}"] = default_values["num_dice_att"]
+    st.session_state[f"wh_dice_size_1_{k}"] = "W"+str(Options.DICE_SIZES_ATT[default_values["dice_size_att"]])
+    st.session_state[f"wh_modifier_1_{k}"] = default_values["modifier_att"]
+    st.session_state[f"wh_dice_size_2_{k}"] = "W" + str(Options.DICE_SIZES_ATT[default_values["dice_size_dmg"]])
+    st.session_state[f"wh_num_dice_2_{k}"] = default_values["num_dice_dmg"]
+    st.session_state[f"wh_modifier_2_{k}"] = default_values["modifier_dmg"]
+    st.session_state[f"wh_hitting_on_{k}"] = default_values["dice_threshhold_1"]
+    st.session_state[f"wh_wounding_on_{k}"] = default_values["strength"]
+    st.session_state[f"wh_modifier_{k}"] = default_values["modifier"]
+    st.session_state[f"wh_ap_{k}"] = default_values["ap"]
