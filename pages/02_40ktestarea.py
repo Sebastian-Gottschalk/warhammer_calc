@@ -93,6 +93,7 @@ with st.sidebar:
     st.page_link("https://www.amazon.de/My-First-Math-Book-Introduction/dp/197596490X", label = "Help, I dont know math")
     st.page_link("https://www.linkedin.com/in/josua-keil-10546a311/", label = "Show me some Orc pictures")
     show_kroot_1()
+    st.write("The stats of the individual units are powered by Wahapedia")
 
 show_kroot_2()
 
