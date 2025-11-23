@@ -166,8 +166,10 @@ for i in range(st.session_state.wh_number_of_weapons):
                             st.warning("Enter only numbers")
                             model_amount = 1 #defaulting to 1
                     weapon_stats = files.get_offensive_stats(model_name, weapon_name, model_amount)
+                    st.write(weapon_stats)
                     for key, val in weapon_stats.items():
                         default_values[key] = val
+                    st.write(default_values)
                     if st.session_state.wh_names_of_weapons[i] != weapon_name:
                         st.session_state.wh_names_of_weapons[i] = weapon_name
                         st.rerun()
