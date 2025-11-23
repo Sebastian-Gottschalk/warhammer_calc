@@ -75,9 +75,9 @@ class csv_files():
             "num_dice_att":num_dice_att * model_amount,
             "dice_size_att":Options.DICE_SIZES_ATT.index(dice_size_att),
             "modifier_att":modifier_att * model_amount,
-            "num_dice_dmg":num_dice_dmg * model_amount,
+            "num_dice_dmg":num_dice_dmg,
             "dice_size_dmg":Options.DICE_SIZES_WND.index(dice_size_dmg),
-            "modifier_dmg":modifier_dmg * model_amount,
+            "modifier_dmg":modifier_dmg,
             "dice_threshhold_1":dice_threshhold_1,
             "strength" : strength,
             "ap" : ap
