@@ -86,6 +86,8 @@ with st.sidebar:
     
     show_distr = st.checkbox("Show distribution")
 
+    inv_distr = st.checkbox("Invert Distribution")
+
     st.write("")
     st.write("")
     st.write("Additional ressources:")
@@ -455,12 +457,12 @@ if any(st.session_state.wh_enabled_weapons):
                 st.write(f"Result for {st.session_state.wh_current_names_of_weapons[i]}")
             if np.sum(st.session_state.wh_troops):
                 new_troops = complete_roll(
-                current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j], plot_sep, plot_sum
+                current_settings, current_plot_result, show_distr, st.session_state.wh_current_troops[j], plot_sep, plot_sum, inv_distr
                 )
                 if len(st.session_state.wh_current_troops) < sum(st.session_state.wh_enabled_weapons):
                     st.session_state.wh_current_troops.append(new_troops)
             else:        
                 complete_roll(
-                    current_settings, current_plot_result, show_distr, st.session_state.wh_troops, plot_sep, plot_sum
+                    current_settings, current_plot_result, show_distr, st.session_state.wh_troops, plot_sep, plot_sum, inv_distr
                 )
             j+=1

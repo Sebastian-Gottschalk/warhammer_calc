@@ -8,7 +8,7 @@ import pandas as pd
 
 @st.cache_data
 def complete_roll(
-        settings, plot_results, show_distr, troops, plot_sep, plot_sum
+        settings, plot_results, show_distr, troops, plot_sep, plot_sum, invert_density = False
         ):
     
     # Hashing of streamlit: sometimes gives settings as a list with the dict inside instead of just the dict
@@ -41,7 +41,7 @@ def complete_roll(
     with col1:
         hit_roll_hits = hit_roll(start_distr,dice_threshhold_1,reroll_hit,hit_roll_crit,sustained_hits_nr,lethal_hits,torrent)
         if plot_results:
-            st.write(plot_result(hit_roll_hits, lethal_hits,col1,"Hit", plot_sep=plot_sep, plot_sum=plot_sum))
+            st.write(plot_result(hit_roll_hits, lethal_hits,col1,"Hit", plot_sep=plot_sep, plot_sum=plot_sum, invert_density=invert_density))
 
 
 
@@ -52,7 +52,7 @@ def complete_roll(
         wound_roll_hits = wound_roll(hit_roll_hits,dice_threshhold_2,reroll_wound,wound_roll_crit,sustained_hits_nr,lethal_hits,torrent,dev_wounds)
 
         if plot_results:
-            st.write(plot_result(wound_roll_hits, dev_wounds, col2, "Wound", plot_sep=plot_sep, plot_sum=plot_sum))
+            st.write(plot_result(wound_roll_hits, dev_wounds, col2, "Wound", plot_sep=plot_sep, plot_sum=plot_sum, invert_density=invert_density))
     
 
     ### SAVE ROLL
@@ -63,7 +63,7 @@ def complete_roll(
         save_roll_hits = save_roll(wound_roll_hits,dice_threshhold_3,dev_wounds,no_save_roll)
 
         if plot_results:
-            st.write(plot_result(save_roll_hits,dev_wounds,col3,"Save",custom_text="failed Saves", plot_sep=plot_sep, plot_sum=plot_sum))
+            st.write(plot_result(save_roll_hits,dev_wounds,col3,"Save",custom_text="failed Saves", plot_sep=plot_sep, plot_sum=plot_sum, invert_density=invert_density))
 
 
     ### DAMAGE ROLL
@@ -76,14 +76,14 @@ def complete_roll(
             if plot_results:
                 st.write(plot_result(
                     shooting_result[1:,:].sum(axis=0).tolist() + [shooting_result[0,-1]],
-                    False,col4,"dead Unit", plot_sep=plot_sep, plot_sum=plot_sum
+                    False,col4,"dead Unit", plot_sep=plot_sep, plot_sum=plot_sum, invert_density=invert_density
                 ))
                 st.write(f"Chance for annihilation: {np.round(100*shooting_result[0,-1],2)}%")
         else:
             damage_roll = damaging_roll(save_roll_hits,damage_distr,dev_wounds)
 
             if plot_results:
-                st.write(plot_result(damage_roll,dev_wounds,col4,"Damage",custom_text="Damage", plot_sep=plot_sep, plot_sum=plot_sum))
+                st.write(plot_result(damage_roll,dev_wounds,col4,"Damage",custom_text="Damage", plot_sep=plot_sep, plot_sum=plot_sum, invert_density=invert_density))
 
     ### FEEL NO PAIN
 
@@ -93,7 +93,7 @@ def complete_roll(
             damage_fnp = fnp_roll(damage_roll,feel_no_pain, dev_wounds, feel_no_pain_2)
             
             if plot_results:
-                st.write(plot_result(damage_fnp,dev_wounds,col5,"Feel no Pain",custom_text="Damage after FnP", plot_sep=plot_sep, plot_sum=plot_sum))
+                st.write(plot_result(damage_fnp,dev_wounds,col5,"Feel no Pain",custom_text="Damage after FnP", plot_sep=plot_sep, plot_sum=plot_sum, invert_density=invert_density))
 
 
     if show_distr:

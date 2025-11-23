@@ -4,7 +4,7 @@ import numpy as np
 import base64
 
 
-def plot_result(hit_roll, auto_crit, col, title, custom_text = None, plot_sep = True, plot_sum = True):
+def plot_result(hit_roll, auto_crit, col, title, custom_text = None, plot_sep = True, plot_sum = True, invert_density = False):
     if title != "Damage":
         title += "s"
     plot_roll = get_threshhold_plot(hit_roll)
@@ -16,7 +16,12 @@ def plot_result(hit_roll, auto_crit, col, title, custom_text = None, plot_sep = 
         ax.set_title(title+" roll")
         ax.set_ylabel("Density")
         ax2 = ax.twinx()
-        ax2.plot(range(len(plot_roll)), np.cumsum(plot_roll), color='blue', marker='o', linestyle='-', label='Probability')
+        if invert_density:
+            plot_values = np.roll(1-np.cumsum(plot_roll),1)
+            plot_values[0] = 1
+            ax2.plot(range(len(plot_roll)), plot_values, color='blue', marker='o', linestyle='-', label='Probability')
+        else:
+            ax2.plot(range(len(plot_roll)), np.cumsum(plot_roll), color='blue', marker='o', linestyle='-', label='Probability')
         ax2.set_ylabel('Distribution')
         ax2.set_ylim([0,1])
         col.pyplot(fig)
