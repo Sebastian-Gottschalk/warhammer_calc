@@ -42,16 +42,33 @@ class csv_files():
         self.options = read_data("Datasheets_options")
         self.unit_comp = read_data("Datasheets_unit_composition")
         self.unit_cost = read_data("Datasheets_models_cost")
+        self.abilities = read_data("Abilities")
+        self.ability_list = read_data("Datasheets_abilities")
 
     def get_defensive_stats(self,name):
-        id = self.get_id(name)
-        current_model = self.models[self.models.datasheet_id == id].iloc[0]
-        toughness = current_model["T"]
-        save = int(current_model["Sv"][0])
-        inv_save = 7 if current_model["inv_sv"] == "-" else int(current_model["inv_sv"])
-        wounds = current_model["W"]
-        model_count = self.get_model_count(id)
-        return toughness, save, inv_save, model_count, wounds
+        if name:
+            id = self.get_id(name)
+            current_model = self.models[self.models.datasheet_id == id].iloc[0]
+            toughness = current_model["T"]
+            save = int(current_model["Sv"][0])
+            inv_save = 7 if current_model["inv_sv"] == "-" else int(current_model["inv_sv"])
+            wounds = current_model["W"]
+            model_count = self.get_model_count(id)
+            ability = self.ability_list[(self.ability_list.datasheet_id == id) & (self.ability_list.ability_id == 8338)]
+            if not ability.empty:
+                fnp = int(ability.iloc[0]["parameter"].strip()[0])
+            else:
+                fnp = 7
+            return {
+                    "toughness" : toughness,
+                    "sv" : save,
+                    "iv" : inv_save,
+                    "troopsize" : model_count,
+                    "wounds" : wounds,
+                    "fnp" : fnp
+                    }
+        else:
+            return Options.DEFAULT_TARGET
     
     def get_offensive_stats(self,name, weapon_name, model_amount):
         id = self.get_id(name)
@@ -90,6 +107,7 @@ class csv_files():
     
     def get_model_count(self, id):
         model_count = self.unit_cost[self.unit_cost["datasheet_id"] == id]["description"].apply(lambda x: sum([int(nr) for nr in x.split(" ") if nr.isnumeric()])).values.tolist()
+        model_count = list(set(model_count))
         if model_count == [0]:
             model_count = [1]
         return model_count

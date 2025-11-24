@@ -16,7 +16,7 @@ class Default_weapon:
         "sustained_hits" : False, "sustained_hits_nr" : 0,
         "lethal_hits" : False, "dev_wounds" : False,"dev_wounds_overspill" : False, "torrent" : False,
         "crit_modifier" : False, "hit_roll_crit" : 6, "wound_roll_crit" : 6,
-        "feel_no_pain_setting" : False, "feel_no_pain" : 6, "fnp_checkbox_mortals": False, "feel_no_pain_2" : 6,
+        "feel_no_pain" : 7, "feel_no_pain_2" : 7,
         "fixed_hit_thresh" : 0
     }
 
@@ -28,6 +28,14 @@ class Options:
     DICE_SIZES_WND = [3,6]
     REROLL_OPTIONS = ["No reroll", "Reroll 1s", "Reroll all", "Fish for crits"] #, "Fish for hits"]
     WEAPON_OPTIONS = ["Melee", "Ranged"]
+    DEFAULT_TARGET = {
+        "toughness" : 6,
+        "sv" : 4,
+        "iv" : 7,
+        "troopsize" : [10],
+        "wounds" : 3,
+        "fnp" : 7
+        }
 
 def setup_40k():
     from wahapedia.db_interaction.interact import csv_files
@@ -52,6 +60,7 @@ def setup_40k():
     st.session_state.wh_total_weapons = 1
     st.session_state.wh_files = csv_files()
     st.session_state.wh_model_amount = [None]
+    st.session_state.wh_shoot_target = ""
 
 def add_weapon(name):
     st.session_state.wh_number_of_weapons +=1
@@ -115,3 +124,13 @@ def update_button_session_state(default_values,k):
     st.session_state[f"wh_modifier_{k}"] = default_values["modifier"]
     st.session_state[f"wh_ap_{k}"] = default_values["ap"]
     st.session_state[f"wh_ap_{k}"] = default_values["ap"]
+
+def update_shoot_target_buttons(values):
+    st.session_state["wh_target_wounds"] = values["wounds"]
+    st.session_state["wh_target_toughness"] = values["toughness"]
+    st.session_state["wh_target_sv"] = values["sv"]
+    st.session_state["wh_target_check_invul"] = values["iv"] < 7
+    st.session_state["wh_target_invul_melee"] = values["iv"] if values["iv"] < 7 else 5
+    st.session_state["wh_target_invul_ranged"] = values["iv"] if values["iv"] < 7 else 5
+    st.session_state["wh_target_check_fnp"] = values["fnp"] < 7
+    st.session_state["wh_target_fnp"] = values["fnp"]

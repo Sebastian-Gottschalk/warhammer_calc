@@ -28,6 +28,8 @@ def complete_roll(
     reroll_all_wound = reroll_wound == "Reroll all"
     reroll_fish_wound = reroll_wound == "Fish for crits"
 
+    feel_no_pain_setting = feel_no_pain < 7 or feel_no_pain_2 < 7
+
     no_save_roll = dice_threshhold_3==7
 
     if feel_no_pain_setting and not np.sum(troops):

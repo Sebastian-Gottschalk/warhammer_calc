@@ -43,12 +43,12 @@ with st.sidebar:
         faction = st.selectbox("Faction", [""] + files.get_faction_names(), index = 0)
         
         model_name = st.selectbox("Model", [""] + files.get_faction_member(faction), index = 0)
+        def_stats = files.get_defensive_stats(model_name)
+        m_troopsize = def_stats["troopsize"]
 
-        if model_name:
-            m_toughness, m_save, m_invul, m_troopsize, m_wounds = files.get_defensive_stats(model_name)
-        else:
-            m_toughness, m_save, m_invul, m_troopsize, m_wounds = 6,4,7,[10],3
-        
+        if model_name != st.session_state.wh_shoot_target:
+            st.session_state.wh_shoot_target = model_name
+            update_shoot_target_buttons(def_stats)
 
         co1, co2, co3, co4 = st.columns([2,1,1,1])
         amount_of_troops = co1.selectbox("\# of Models", m_troopsize, accept_new_options = True)
@@ -58,21 +58,30 @@ with st.sidebar:
             else:
                 st.warning("Invalid Input, defaulting to 10 models")
                 amount_of_troops = 10
-        wounds_per_troop = co2.number_input("W",1,20,value=m_wounds)
-        toughness = co3.number_input("T",1,100,value=m_toughness)
-        troops_save = co4.number_input("SV",2,6,value=m_save)
+        wounds_per_troop = co2.number_input("W",1,20,key = "wh_target_wounds")
+        toughness = co3.number_input("T",1,16, key = "wh_target_toughness")
+        troops_save = co4.number_input("SV",2,6,key = "wh_target_sv")
         troops = np.zeros((wounds_per_troop+1,amount_of_troops))
         troops[wounds_per_troop,0] = 1
-        if st.checkbox("Invul save", value = m_invul < 7):
-            default_invul = 5 if m_invul == 7 else m_invul
+        if st.checkbox("Invul save", key = "wh_target_check_invul"):
             co1, co2 = st.columns(2)
             with co1:
-                invul_melee = st.number_input("Melee",2,6,value = m_invul)
+                invul_melee = st.number_input("Melee",2,6,key = "wh_target_invul_melee")
             with co2:
-                invul_ranged = st.number_input("Ranged",2,6,value = m_invul)
+                invul_ranged = st.number_input("Ranged",2,6,key = "wh_target_invul_ranged")
         else:
-            invul_melee = 0
-            invul_ranged = 0
+            invul_melee = 6
+            invul_ranged = 6
+        if st.checkbox("FnP", key = "wh_target_check_fnp"):
+            feel_no_pain = st.number_input("FnP",2,7,key = "wh_target_fnp")
+            if st.checkbox("FnP for Mortals"):
+                feel_no_pain_2 = st.number_input("FnP against Mortals",2,7)
+            else:
+                feel_no_pain_2 = 7
+        else:
+            feel_no_pain = 7
+            feel_no_pain_2 = 7
+
     
     plot_results = st.checkbox("Plot Results", value = True)
     if plot_results:
@@ -158,15 +167,7 @@ for i in range(st.session_state.wh_number_of_weapons):
         st.session_state.wh_expanders[i] = True
         left,middle, col_save,col_del,_ = st.columns([21,3,3,1,1])
         all_delete_columns.append(col_del)
-        # name = left.text_input("Name",value = st.session_state.wh_names_of_weapons[i], key=f"wh_enter_name_{k}")
         weapon_kind = middle.selectbox(" ",Options.WEAPON_OPTIONS, index = default_values["weapon_kind"],key = f"wh_weapon_kind_{k}")
-        # if name != st.session_state.wh_names_of_weapons[i]:
-        #     st.session_state.wh_names_of_weapons[i] = name
-        #     st.session_state[f"wh_faction_sel_{k}"] = ""
-        #     st.session_state[f"wh_model_sel_{k}"] = ""
-        #     st.session_state[f"wh_weapon_sel_{k}"] = ""
-        #     st.session_state[f"wh_model_amount_sel_{k}"] = ""
-        #     st.rerun()
 
         if fight_troop:
             faction = co1.selectbox("Faction", [""] + files.get_faction_names(), index = 0, key = f"wh_faction_sel_{k}")
@@ -286,23 +287,23 @@ for i in range(st.session_state.wh_number_of_weapons):
         dev_wounds = col4.checkbox("Dev Wounds", key=f"wh_dev_wounds_{k}", value = default_values["dev_wounds"])
         torrent = col5.checkbox("Torrent", key=f"wh_torrent_{k}", value = default_values["torrent"])
         crit_modifier= col6.checkbox("Crit Modifier", key=f"wh_modify_crit_{k}", value = default_values["crit_modifier"])        
-        fnp_checkbox =  col7.checkbox("Feel No Pain", key=f"wh_feel_no_pain_{k}", value = default_values["feel_no_pain_setting"])
+        # fnp_checkbox =  col7.checkbox("Feel No Pain", key=f"wh_feel_no_pain_{k}", value = default_values["feel_no_pain_setting"])
         
         if dev_wounds:
             dev_wounds_overspill = col4.checkbox("Overspill", key=f"wh_dev_wounds_overspill_{k}", value = default_values["dev_wounds_overspill"])
         if torrent: # the combination doesnt make sense and only screws up the plots
             lethal_hits = False
-        if fnp_checkbox:
-            feel_no_pain = col7.number_input("Normal FnP",2,7,value=default_values["feel_no_pain"],label_visibility="collapsed", key=f"wh_normal_fnp_{k}")
-            fnp_checkbox_mortals = col7.checkbox("Different FnP on Mortals", key=f"wh_weird_stuff_{k}", value = default_values["fnp_checkbox_mortals"])
-            if fnp_checkbox_mortals:
-                feel_no_pain_2 = col7.number_input("DevWounds FnP",2,7,value=default_values["feel_no_pain_2"],label_visibility="collapsed")
-            else:
-                feel_no_pain_2 = feel_no_pain     
-        else:
-            feel_no_pain = 6
-            feel_no_pain_2 = 6
-            fnp_checkbox_mortals = False
+        # if fnp_checkbox:
+        #     feel_no_pain = col7.number_input("Normal FnP",2,7,value=default_values["feel_no_pain"],label_visibility="collapsed", key=f"wh_normal_fnp_{k}")
+        #     fnp_checkbox_mortals = col7.checkbox("Different FnP on Mortals", key=f"wh_weird_stuff_{k}", value = default_values["fnp_checkbox_mortals"])
+        #     if fnp_checkbox_mortals:
+        #         feel_no_pain_2 = col7.number_input("DevWounds FnP",2,7,value=default_values["feel_no_pain_2"],label_visibility="collapsed")
+        #     else:
+        #         feel_no_pain_2 = feel_no_pain     
+        # else:
+        #     feel_no_pain = 7
+        #     feel_no_pain_2 = 7
+        #     fnp_checkbox_mortals = False
 
         if fight_troop:
             if col8.checkbox("No saving throw", value = default_values["dice_threshhold_3"] == 7,key=f"wh_no_sv_throw_{k}"):
@@ -355,9 +356,7 @@ for i in range(st.session_state.wh_number_of_weapons):
             "crit_modifier":crit_modifier,
             "hit_roll_crit": hit_roll_crit,
             "wound_roll_crit": wound_roll_crit,
-            "feel_no_pain_setting": fnp_checkbox,
             "feel_no_pain": feel_no_pain,
-            "fnp_checkbox_mortals": fnp_checkbox_mortals,
             "feel_no_pain_2": feel_no_pain_2,
             "fixed_hit_thresh" : fix_hit
         }
